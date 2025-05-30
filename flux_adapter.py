@@ -930,7 +930,7 @@ def extract_image_features(image_pil, siglip_model, siglip_processor, dinov2_mod
         return None
 
 # 使用提取的特征和投影器生成IP-Adapter特征
-def generate_ip_adapter_embeddings(model, image_features, image_proj_model, scale=1.0):
+def process_image_features(model, image_features, image_proj_model, scale=1.0):
     try:
         device = model_management.get_torch_device()
         
@@ -945,6 +945,16 @@ def generate_ip_adapter_embeddings(model, image_features, image_proj_model, scal
         
         print(f"融合后的深层特征形状: {image_embeds_low_res_deep.shape}")
         print(f"融合后的浅层特征形状: {image_embeds_low_res_shallow.shape}")
+        
+        # 检查投影器的设备和数据类型
+        proj_device = next(image_proj_model.parameters()).device
+        proj_dtype = next(image_proj_model.parameters()).dtype
+        print(f"投影器当前设备: {proj_device}, 数据类型: {proj_dtype}")
+        
+        # 确保投影器在正确的设备和数据类型上
+        if proj_device != device or proj_dtype != dtype:
+            print(f"将投影器移动到{device}并转换为{dtype}")
+            image_proj_model = image_proj_model.to(device, dtype=dtype)
         
         # 使用投影器生成IP-Adapter嵌入
         with torch.no_grad():
@@ -964,6 +974,51 @@ def generate_ip_adapter_embeddings(model, image_features, image_proj_model, scal
         print(f"生成IP-Adapter嵌入失败: {str(e)}")
         traceback.print_exc()
         return None
+        
+# 完整流程的生成IP-Adapter嵌入函数
+def generate_ip_adapter_embeddings(reference_image, siglip_model, siglip_processor, dinov2_model, dinov2_processor, image_proj_model, scale=1.0):
+    try:
+        device = model_management.get_torch_device()
+        # 安全地使用float16，避免FP8类型不兼容问题
+        dtype = torch.float16 if 'cuda' in str(device) else torch.float32
+        print(f"使用设备: {device}, 数据类型: {dtype}")
+        
+        # 1. 提取图像特征
+        image_features = extract_image_features(reference_image, siglip_model, siglip_processor, dinov2_model, dinov2_processor)
+        if image_features is None:
+            print(f"提取图像特征失败")
+            return None
+            
+        # 2. 确保所有特征使用相同的设备和数据类型
+        for key in image_features:
+            if torch.is_tensor(image_features[key]):
+                # 检查张量的当前设备和数据类型
+                current_device = image_features[key].device
+                current_dtype = image_features[key].dtype
+                
+                # 如果是FP8类型，需要先转换为FP16
+                if str(current_dtype).find('float8') >= 0:
+                    print(f"检测到FP8数据类型，转换为FP16: {key}")
+                    image_features[key] = image_features[key].to(dtype=torch.float16)
+                    
+                # 确保在正确的设备上
+                if current_device != device:
+                    print(f"将{key}从{current_device}移动到{device}")
+                    image_features[key] = image_features[key].to(device)
+                    
+                # 确保数据类型正确
+                if image_features[key].dtype != dtype:
+                    print(f"将{key}的数据类型从{image_features[key].dtype}转换为{dtype}")
+                    image_features[key] = image_features[key].to(dtype=dtype)
+        
+        # 3. 使用优化后的特征生成IP-Adapter嵌入
+        ip_adapter_embeds = process_image_features(None, image_features, image_proj_model, scale)
+        
+        return ip_adapter_embeds
+    except Exception as e:
+        print(f"生成IP-Adapter嵌入失败: {str(e)}")
+        traceback.print_exc()
+        return None
 
 # 将InstantCharacter应用到模型
 def apply_instant_character(model, reference_image, siglip_model=None, siglip_processor=None, dinov2_model=None, dinov2_processor=None, ip_adapter_model=None, weight=1.0):
@@ -971,13 +1026,13 @@ def apply_instant_character(model, reference_image, siglip_model=None, siglip_pr
         print(f"=== 开始应用InstantCharacter到模型 ===")
         
         # 1. 确保模型有效 - 特别为ComfyUI中的Transformer格式FLUX模型设计
-        # 在ComfyUI中，模型是以独立的.safetensors文件加载，并被包装在ComfyUI的各种包装器中
+        # 在ComfyUI中，模型是以独立的.safetensors文件加载，并被包裹在ComfyUI的各种包装器中
         print(f"检查FLUX模型兼容性，模型类型: {type(model)}")
         
         # 尽量适应ComfyUI中的各种可能的FLUX模型包装格式
         is_flux = False
         
-        # 直接设置is_flux = True用于测试 - 注释掉这一行如果你需要正常检测
+        # 直接设置is_flux = True用于测试 - 当前保留便于调试
         is_flux = True
         
         # 检查ComfyUI ModelPatcher格式
@@ -1014,41 +1069,55 @@ def apply_instant_character(model, reference_image, siglip_model=None, siglip_pr
         if hasattr(model, 'model'):
             print(f"model属性: {[attr for attr in dir(model.model) if not attr.startswith('__')][:10]}")
             
-        # 如果不是FLUX模型，返回原始模型
         if not is_flux:
-            print(f"警告: 无法确认当前模型是FLUX模型，类型: {type(model)}")
-            # 仍然继续处理 - 假设用户知道自己在做什么
-            print("尝试继续处理，假设这是FLUX模型...")
-        else:
-            print("检测到FLUX模型，继续处理...")
-        
-        # 2. 初始化IP-Adapter组件
-        image_proj_model = init_ip_adapter_components(model, ip_adapter_model, nb_token=1024)
-        if image_proj_model is None:
-            print(f"错误: IP-Adapter组件初始化失败")
+            print(f"不是FLUX模型，退出")
             return model
             
-        # 3. 尝试从模型对象中提取处理器
-        if siglip_model is not None and siglip_processor is None:
-            print("尝试从SigLIP模型中提取处理器")
-            if isinstance(siglip_model, tuple) and len(siglip_model) >= 2:
-                siglip_processor = siglip_model[1]
-                siglip_model = siglip_model[0]
-                print("从SigLIP模型元组中提取处理器成功")
-            elif hasattr(siglip_model, 'processor') and siglip_model.processor is not None:
-                siglip_processor = siglip_model.processor
-                print("从SigLIP模型属性中提取处理器成功")
-            elif hasattr(siglip_model, 'image_processor') and siglip_model.image_processor is not None:
-                siglip_processor = siglip_model.image_processor
-                print("从SigLIP模型属性中提取image_processor成功")
-            else:
-                try:
-                    from transformers import AutoProcessor
-                    siglip_processor = AutoProcessor.from_pretrained("google/siglip-base-patch16-384")
-                    print("无法从模型中提取SigLIP处理器，使用默认处理器")
-                except Exception as e:
-                    print(f"无法创建SigLIP处理器: {e}")
-                    return model
+        print(f"检测到FLUX模型，继续处理...")
+
+        # 2. 上传并处理参考图像
+        if reference_image is None:
+            print(f"错误: 缺少参考图像")
+            return model
+
+        # 3. 加载必要的模型和处理器
+        # 已经有了SigLIP模型和处理器，跳过加载步骤
+        
+        # 4. 初始化IP-Adapter组件
+        # 加载IP-Adapter模型 - 先检查是否已经作为参数提供
+        if ip_adapter_model is None:
+            # 如果未提供，使用默认路径加载
+            ip_adapter_path = get_model_path("instantcharacter_ip-adapter.bin")
+            if ip_adapter_path is None:
+                print(f"错误: 找不到IP-Adapter模型")
+                return model
+                
+            print(f"正在加载IP-Adapter模型: {ip_adapter_path}")
+            ip_adapter_model = init_ip_adapter_components(model, ip_adapter_path)
+        else:
+            # 使用提供的模型
+            print(f"使用提供的IP-Adapter模型")
+            ip_adapter_model = init_ip_adapter_components(model, ip_adapter_model)
+            
+        if ip_adapter_model is None:
+            print(f"错误: IP-Adapter组件初始化失败")
+            return model
+
+        # 5. 检查必要的处理器并生成IP-Adapter图像特征
+        # 检查并确保所有必要的模型和处理器都可用
+        if siglip_model is None:
+            print(f"错误: SigLIP模型缺失")
+            return model
+            
+        if siglip_processor is None:
+            print("检测到SigLIP处理器缺失，尝试自动创建")
+            try:
+                from transformers import AutoProcessor
+                siglip_processor = AutoProcessor.from_pretrained("google/siglip-base-patch16-384")
+                print("成功创建 SigLIP 处理器")
+            except Exception as e:
+                print(f"无法创建 SigLIP 处理器: {e}")
+                return model
         
         if dinov2_model is not None and dinov2_processor is None:
             print("尝试从DINOv2模型中提取处理器")
@@ -1068,51 +1137,28 @@ def apply_instant_character(model, reference_image, siglip_model=None, siglip_pr
                     dinov2_processor = AutoProcessor.from_pretrained("facebook/dinov2-base")
                     print("无法从模型中提取DINOv2处理器，使用默认处理器")
                 except Exception as e:
-                    print(f"无法创建DINOv2处理器: {e}")
+                    print(f"创建DINOv2处理器失败: {e}")
                     return model
-                    
-        # 检查必要模型组件
-        if siglip_model is None or dinov2_model is None:
-            print("错误: 必要的模型组件(SigLIP/DINOv2)不可用")
-            return model
-        if siglip_processor is None or dinov2_processor is None:
-            print("错误: 必要的处理器组件不可用")
-            return model
-            
-        # 提取图像特征
-        image_features = extract_image_features(
-            reference_image, 
-            siglip_model, 
-            siglip_processor, 
-            dinov2_model, 
-            dinov2_processor
-        )
-        if image_features is None:
-            print(f"错误: 图像特征提取失败")
-            return model
         
-        # 4. 生成IP-Adapter嵌入
-        ip_adapter_image_embeds = generate_ip_adapter_embeddings(
-            model, 
-            image_features, 
-            image_proj_model,
-            scale=weight
-        )
+        # 现在所有组件都准备好了，生成IP-Adapter嵌入
+        print(f"所有组件已就绪，开始生成IP-Adapter嵌入")
+        print(f"SigLIP处理器类型: {type(siglip_processor)}")
+        print(f"DINOv2处理器类型: {type(dinov2_processor)}")
+            
+        # 生成IP-Adapter嵌入
+        ip_adapter_image_embeds = generate_ip_adapter_embeddings(reference_image, siglip_model, siglip_processor, dinov2_model, dinov2_processor, ip_adapter_model, scale=weight)
+        
         if ip_adapter_image_embeds is None:
-            print(f"错误: IP-Adapter嵌入生成失败")
+            print(f"生成IP-Adapter嵌入失败，返回原始模型")
             return model
             
-        # 5. 修改原始__call__方法以支持自动应用IP-Adapter
+        # 6. 保存原始__call__函数并创建新的包装器
         original_call = model.__call__
         
         def custom_call_wrapper(self, *args, **kwargs):
-            # 添加IP-Adapter嵌入到kwargs
             print(f"InstantCharacter激活，当前权重: {weight}")
-            if ip_adapter_image_embeds is not None:
-                kwargs["ip_adapter_image_embeds"] = ip_adapter_image_embeds
-            else:
-                print(f"缺少必要的特征，回退到原始forward")
-            
+            # 添加IP-Adapter嵌入到kwargs
+            kwargs["ip_adapter_image_embeds"] = ip_adapter_image_embeds
             # 调用原始__call__方法
             return original_call(*args, **kwargs)
         
