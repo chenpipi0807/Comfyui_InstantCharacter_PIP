@@ -1,0 +1,552 @@
+import os
+import torch
+import numpy as np
+import folder_paths
+from PIL import Image
+import comfy.model_management as model_management
+from transformers import SiglipVisionModel, SiglipImageProcessor, AutoModel, AutoImageProcessor
+import traceback
+import types
+
+# 路径管理和模型检查函数
+def load_instantcharacter_paths():
+    """加载InstantCharacter模型路径并检查文件是否存在"""
+    comfyui_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    models_dir = os.path.join(comfyui_dir, "models")
+    instantcharacter_dir = os.path.join(models_dir, "instantCharacter")
+    
+    # 设置模型路径
+    siglip_model_path = os.path.join(instantcharacter_dir, "siglip-so400m-patch14-384")
+    dinov2_model_path = os.path.join(instantcharacter_dir, "dinov2-giant")
+    ip_adapter_path = os.path.join(instantcharacter_dir, "instantcharacter_ip-adapter.bin")
+    
+    print(f"InstantCharacter模型路径: {instantcharacter_dir}")
+    print(f"SigLIP模型路径: {siglip_model_path}")
+    print(f"DINOv2模型路径: {dinov2_model_path}")
+    print(f"IP-Adapter路径: {ip_adapter_path}")
+    
+    # 检查文件并返回结果
+    result = {
+        "valid": True,
+        "instantcharacter_dir": instantcharacter_dir,
+        "siglip_model_path": siglip_model_path,
+        "dinov2_model_path": dinov2_model_path,
+        "ip_adapter_path": ip_adapter_path,
+        "missing_models": []
+    }
+    
+    if not os.path.exists(instantcharacter_dir):
+        print(f"错误: InstantCharacter模型目录不存在: {instantcharacter_dir}")
+        result["valid"] = False
+        result["missing_models"].append("InstantCharacter目录")
+    
+    if not os.path.exists(siglip_model_path):
+        print(f"错误: SigLIP模型路径不存在: {siglip_model_path}")
+        result["valid"] = False
+        result["missing_models"].append("SigLIP")
+        
+    if not os.path.exists(dinov2_model_path):
+        print(f"错误: DINOv2模型路径不存在: {dinov2_model_path}")
+        result["valid"] = False
+        result["missing_models"].append("DINOv2")
+        
+    if not os.path.exists(ip_adapter_path):
+        print(f"错误: IP-Adapter模型路径不存在: {ip_adapter_path}")
+        result["valid"] = False
+        result["missing_models"].append("IP-Adapter")
+    
+    return result
+
+# 原始模型前向传播函数
+original_forward = None
+
+class InstantCharacter_PIP:
+    """实现InstantCharacter功能的节点 - 适用于ComfyUI工作流"""
+    
+    def __init__(self):
+        # 加载模型路径
+        paths = load_instantcharacter_paths()
+        self.instantcharacter_dir = paths["instantcharacter_dir"]
+        self.siglip_model_path = paths["siglip_model_path"]
+        self.dinov2_model_path = paths["dinov2_model_path"]
+        self.ip_adapter_path = paths["ip_adapter_path"]
+        self.valid = paths["valid"]
+        self.missing_models = paths["missing_models"]
+        
+        # 缓存模型
+        self.siglip_model = None
+        self.siglip_processor = None
+        self.dinov2_model = None
+        self.dinov2_processor = None
+        
+        # IP-Adapter模型
+        self.ip_adapter = None
+        self.ip_adapter_loaded = False
+        
+        # 缓存提取的特征
+        self.siglip_features = None
+        self.dinov2_features = None
+        self.image_emb = None  # IP-Adapter图像嵌入
+        
+        # 保存原始模型前向传播函数的引用
+        self.original_forward = None
+        self.dino_model = None
+        self.dino_processor = None
+    
+    def load_siglip_model(self):
+        """加载SigLIP模型用于特征提取"""
+        if self.siglip_model is None:
+            try:
+                print(f"正在加载SigLIP模型: {self.siglip_model_path}")
+                from transformers import SiglipVisionModel, AutoProcessor
+                self.siglip_model = SiglipVisionModel.from_pretrained(self.siglip_model_path)
+                self.siglip_processor = AutoProcessor.from_pretrained(self.siglip_model_path)
+                print("SigLIP模型加载成功")
+            except Exception as e:
+                print(f"加载SigLIP模型失败: {str(e)}")
+                traceback.print_exc()
+                return False
+        return True
+    
+    def load_dinov2_model(self):
+        """加载DINOv2模型用于特征提取"""
+        if self.dino_model is None:
+            try:
+                print(f"正在加载DINOv2模型: {self.dinov2_model_path}")
+                from transformers import AutoModel, AutoProcessor
+                self.dino_model = AutoModel.from_pretrained(self.dinov2_model_path)
+                self.dino_processor = AutoProcessor.from_pretrained(self.dinov2_model_path)
+                print("DINOv2模型加载成功")
+            except Exception as e:
+                print(f"加载DINOv2模型失败: {str(e)}")
+                traceback.print_exc()
+                return False
+        return True
+        
+    def load_ip_adapter(self):
+        """加载IP-Adapter模型"""
+        if not self.ip_adapter_loaded:
+            try:
+                print(f"正在加载IP-Adapter模型: {self.ip_adapter_path}")
+                import torch
+                
+                # 检查文件是否存在
+                if not os.path.exists(self.ip_adapter_path):
+                    print(f"错误: IP-Adapter文件不存在: {self.ip_adapter_path}")
+                    return False
+                
+                # 加载IP-Adapter模型
+                self.ip_adapter = torch.load(self.ip_adapter_path, map_location="cpu")
+                print("IP-Adapter模型加载成功")
+                self.ip_adapter_loaded = True
+                return True
+            except Exception as e:
+                print(f"加载IP-Adapter模型失败: {str(e)}")
+                traceback.print_exc()
+                return False
+        return True
+    
+    def extract_image_features(self, image, device="cuda"):
+        """从参考图像中提取SigLIP、DINOv2和IP-Adapter特征"""
+        try:
+            # 确保模型已加载
+            if not self.load_siglip_model() or not self.load_dinov2_model():
+                print("模型加载失败，无法提取特征")
+                return False
+            
+            # 加载IP-Adapter模型
+            ip_adapter_available = self.load_ip_adapter()
+            if not ip_adapter_available:
+                print("IP-Adapter模型加载失败，将仅使用SigLIP和DINOv2特征")
+            
+            # 转换图像格式
+            from PIL import Image
+            import torch
+            import numpy as np
+            
+            # 将ComfyUI图像格式转换为PIL图像
+            # ComfyUI图像格式为[B, H, W, C]的numpy数组，值范围0-1
+            if isinstance(image, torch.Tensor):
+                image_np = image.cpu().numpy()
+            else:
+                image_np = image
+                
+            # 取第一张图像（如果是批量的）
+            if len(image_np.shape) == 4:
+                image_np = image_np[0]
+                
+            # 确保值范围为0-255并转为uint8
+            image_np = (image_np * 255).astype(np.uint8)
+            pil_image = Image.fromarray(image_np)
+            
+            # 提取SigLIP特征
+            print("提取SigLIP特征...")
+            self.siglip_model.to(device)
+            inputs = self.siglip_processor(images=pil_image, return_tensors="pt").to(device)
+            with torch.no_grad():
+                outputs = self.siglip_model(**inputs, output_hidden_states=True)
+            self.siglip_features = outputs.last_hidden_state
+            print(f"SigLIP特征形状: {self.siglip_features.shape}")
+            
+            # 提取DINOv2特征
+            print("提取DINOv2特征...")
+            self.dino_model.to(device)
+            inputs = self.dino_processor(images=pil_image, return_tensors="pt").to(device)
+            with torch.no_grad():
+                outputs = self.dino_model(**inputs, output_hidden_states=True)
+            self.dinov2_features = outputs.last_hidden_state
+            print(f"DINOv2特征形状: {self.dinov2_features.shape}")
+            
+            # 提取IP-Adapter图像嵌入
+            if ip_adapter_available:
+                try:
+                    print("提取IP-Adapter图像嵌入...")
+                    
+                    # 打印IP-Adapter模型结构以进行调试
+                    print(f"IP-Adapter模型类型: {type(self.ip_adapter)}")
+                    if isinstance(self.ip_adapter, dict):
+                        print(f"IP-Adapter字典键: {list(self.ip_adapter.keys())}")
+                    else:
+                        # 打印对象属性
+                        print(f"IP-Adapter属性: {dir(self.ip_adapter)}")
+                    
+                    # 调整图像尺寸为IP-Adapter所需的尺寸
+                    target_size = (224, 224)  # IP-Adapter通常需要224x224的输入
+                    ip_image = pil_image.resize(target_size, Image.LANCZOS)
+                    
+                    # 将图像转换为当前设备上的张量
+                    ip_tensor = torch.from_numpy(np.array(ip_image)).float() / 255.0
+                    ip_tensor = ip_tensor.permute(2, 0, 1).unsqueeze(0).to(device)  # [1, 3, H, W]
+                    
+                    # 处理不同类型的IP-Adapter模型
+                    if isinstance(self.ip_adapter, dict):
+                        # 如果是字典类型，尝试直接获取预计算的图像嵌入
+                        if 'image_emb' in self.ip_adapter:
+                            self.image_emb = self.ip_adapter['image_emb']
+                            print(f"从字典中加载预计算的图像嵌入")
+                        elif 'image_encoder' in self.ip_adapter:
+                            # 如果字典包含图像编码器
+                            encoder = self.ip_adapter['image_encoder'].to(device)
+                            with torch.no_grad():
+                                self.image_emb = encoder(ip_tensor)
+                            print(f"使用字典中的图像编码器")
+                        # 如果是InstantCharacter特定格式，可能有其他键
+                        elif 'clip_vision' in self.ip_adapter:
+                            vision_model = self.ip_adapter['clip_vision'].to(device)
+                            with torch.no_grad():
+                                vision_output = vision_model(ip_tensor)
+                                # 可能需要从输出中选择特定属性
+                                if hasattr(vision_output, 'last_hidden_state'):
+                                    self.image_emb = vision_output.last_hidden_state
+                                elif hasattr(vision_output, 'image_embeds'):
+                                    self.image_emb = vision_output.image_embeds
+                                else:
+                                    # 尝试获取第一个张量输出
+                                    for key, value in vision_output.items():
+                                        if isinstance(value, torch.Tensor):
+                                            self.image_emb = value
+                                            print(f"使用CLIP vision输出: {key}")
+                                            break
+                            print(f"使用clip_vision模型提取图像特征")
+                        else:
+                            # 最后尝试使用第一个看起来是模型的键
+                            for key, value in self.ip_adapter.items():
+                                if isinstance(value, torch.nn.Module):
+                                    print(f"尝试使用字典中的模型: {key}")
+                                    model = value.to(device)
+                                    with torch.no_grad():
+                                        try:
+                                            self.image_emb = model(ip_tensor)
+                                            break
+                                        except Exception as e:
+                                            print(f"使用{key}失败: {e}")
+                                            continue
+                    else:
+                        # 如果是模型对象，尝试标准方法
+                        if hasattr(self.ip_adapter, 'image_encoder'):
+                            # 如果IP-Adapter有图像编码器
+                            self.ip_adapter.image_encoder.to(device)
+                            with torch.no_grad():
+                                self.image_emb = self.ip_adapter.image_encoder(ip_tensor)
+                            print("使用image_encoder属性")
+                        elif hasattr(self.ip_adapter, 'encode_image'):
+                            # 如果IP-Adapter提供了encode_image方法
+                            with torch.no_grad():
+                                self.image_emb = self.ip_adapter.encode_image(ip_tensor)
+                            print("使用encode_image方法")
+                        elif hasattr(self.ip_adapter, 'clip_vision'):
+                            # 如果有CLIP vision模型
+                            vision_model = self.ip_adapter.clip_vision.to(device)
+                            with torch.no_grad():
+                                self.image_emb = vision_model(ip_tensor)
+                            print("使用clip_vision属性")
+                        else:
+                            # 如果是预计算的图像嵌入
+                            print("无法找到IP-Adapter图像嵌入或其编码器")
+                            print("将尝试使用对象的__call__方法")
+                            try:
+                                with torch.no_grad():
+                                    self.image_emb = self.ip_adapter(ip_tensor)
+                            except Exception as e:
+                                print(f"IP-Adapter __call__失败: {e}")
+                    
+                    if self.image_emb is not None:
+                        if isinstance(self.image_emb, dict):
+                            print(f"IP-Adapter输出是字典，键: {list(self.image_emb.keys())}")
+                            # 尝试获取张量输出
+                            for key, value in self.image_emb.items():
+                                if isinstance(value, torch.Tensor):
+                                    self.image_emb = value
+                                    print(f"使用IP-Adapter输出字典中的张量: {key}")
+                                    break
+                        print(f"IP-Adapter图像嵌入形状: {self.image_emb.shape}")
+                    else:
+                        print("无法提取IP-Adapter图像嵌入")
+                except Exception as e:
+                    print(f"IP-Adapter特征提取失败: {str(e)}")
+                    traceback.print_exc()
+                    # 继续使用SigLIP和DINOv2特征
+            
+            return True
+        except Exception as e:
+            print(f"提取图像特征失败: {str(e)}")
+            traceback.print_exc()
+            return False
+    
+    def custom_forward_wrapper(self, original_forward, weight=1.0):
+        """创建一个自定义的前向传播函数，注入参考图像特征"""
+        siglip_features = self.siglip_features
+        dinov2_features = self.dinov2_features
+        
+        # 根据FLUX模型的forward函数定义精确匹配参数
+        def custom_forward(self, x, timestep, context, y, guidance=None, control=None, transformer_options={}, **kwargs):
+            print("InstantCharacter: 应用视觉特征")
+            
+            try:
+                # 应用InstantCharacter特征（SigLIP、DINOv2和IP-Adapter）
+                if context is not None and weight > 0:
+                    import torch
+                    import torch.nn.functional as F
+                    
+                    # 创建增强的context副本，避免修改原始对象
+                    enhanced_context = context.clone()
+                    
+                    # 第1步: 应用SigLIP和DINOv2特征融合
+                    if siglip_features is not None and dinov2_features is not None:
+                        print(f"Context形状: {context.shape}, SigLIP形状: {siglip_features.shape}, DINOv2形状: {dinov2_features.shape}")
+                        try:
+                            # 调整SigLIP特征维度以匹配context
+                            # SigLIP特征形状通常是[1, 576, 768]，context通常是[1, 256, 4096]
+                            print("处理SigLIP特征...")
+                            
+                            # 1. 线性映射将SigLIP特征通道数从768变排1024
+                            siglip_proj = torch.nn.Linear(siglip_features.shape[-1], 1024).to(siglip_features.device)
+                            siglip_features_proj = siglip_proj(siglip_features)
+                            
+                            # 2. 使用注意力机制选择最相关的令牌
+                            token_count = min(enhanced_context.shape[1], 256)  # 限制令牌数量
+                            
+                            # 将SigLIP特征重新采样到与context相同的序列长度
+                            if siglip_features_proj.shape[1] != token_count:
+                                siglip_resized = F.interpolate(
+                                    siglip_features_proj.permute(0, 2, 1),
+                                    size=token_count,
+                                    mode='linear'
+                                ).permute(0, 2, 1)
+                            else:
+                                siglip_resized = siglip_features_proj
+                            
+                            # 3. 处理DINOv2特征，通常形状为[1, 257, 1536]
+                            print("处理DINOv2特征...")
+                            dino_proj = torch.nn.Linear(dinov2_features.shape[-1], 1024).to(dinov2_features.device)
+                            dino_features_proj = dino_proj(dinov2_features)
+                            
+                            # 将DINOv2特征重新采样
+                            if dino_features_proj.shape[1] != token_count:
+                                dino_resized = F.interpolate(
+                                    dino_features_proj.permute(0, 2, 1),
+                                    size=token_count,
+                                    mode='linear'
+                                ).permute(0, 2, 1)
+                            else:
+                                dino_resized = dino_features_proj
+                            
+                            # 4. 融合SigLIP和DINOv2特征
+                            combined_features = (siglip_resized + dino_resized) / 2.0
+                            
+                            # 5. 最终映射到context维度
+                            final_proj = torch.nn.Linear(combined_features.shape[-1], enhanced_context.shape[-1]).to(combined_features.device)
+                            visual_features = final_proj(combined_features)
+                            
+                            # 6. 应用融合特征到context
+                            # 我们只增强开头的一部分令牌，因为这些通常包含描述信息
+                            enhance_ratio = 0.5  # 增强前50%的令牌
+                            enhance_count = int(token_count * enhance_ratio)
+                            
+                            # 渐进融合，起始令牌影响最大，然后逐渐减小
+                            siglip_dino_weight = weight * 0.7  # 给SigLIP+DINOv2分配70%的权重
+                            alpha = torch.linspace(1.0, 0.1, enhance_count).to(enhanced_context.device).unsqueeze(0).unsqueeze(-1)
+                            enhanced_context[:, :enhance_count, :] = (1.0 - siglip_dino_weight * alpha) * enhanced_context[:, :enhance_count, :] + \
+                                                                    (siglip_dino_weight * alpha) * visual_features[:, :enhance_count, :]
+                            
+                            print(f"成功融合SigLIP+DINOv2特征到context，使用权重: {siglip_dino_weight}")
+                        except Exception as e:
+                            print(f"SigLIP/DINOv2特征融合失败: {str(e)}")
+                            traceback.print_exc()
+                    
+                    # 第2步: 应用IP-Adapter特征
+                    if hasattr(self, 'image_emb') and self.image_emb is not None and self.ip_adapter_loaded:
+                        try:
+                            print(f"IP-Adapter图像嵌入形状: {self.image_emb.shape}")
+                            
+                            # 使用IP-Adapter的注意力机制应用图像特征
+                            # 通常IP-Adapter的应用需要以下组件:
+                            # 1. image_proj - 图像投影层
+                            # 2. ip_layers - IP适配层
+                            
+                            # 检查IP-Adapter的结构并应用其功能
+                            if hasattr(self.ip_adapter, 'image_proj') and hasattr(self.ip_adapter, 'ip_layers'):
+                                # 将IP-Adapter组件移动到当前设备
+                                device = enhanced_context.device
+                                self.ip_adapter.image_proj.to(device)
+                                
+                                # 将图像嵌入投影到与context相同的维度
+                                image_proj = self.ip_adapter.image_proj(self.image_emb.to(device))
+                                
+                                # 应用IP-Adapter层
+                                ip_weight = weight * 0.3  # 给IP-Adapter分配30%的权重
+                                for i, layer in enumerate(self.ip_adapter.ip_layers):
+                                    layer.to(device)
+                                    # 应用IP-Adapter的注意力机制
+                                    ip_context = layer(enhanced_context, image_proj)
+                                    # 渐进融合IP-Adapter的输出
+                                    enhanced_context = enhanced_context + ip_weight * ip_context
+                                
+                                print(f"成功应用IP-Adapter到context，使用权重: {ip_weight}")
+                            else:
+                                # 如果不是标准IP-Adapter结构，尝试其他方法
+                                print("IP-Adapter模型结构不标准，使用替代方法")
+                                # 简单融合: 将图像嵌入作为上下文的一部分
+                                if self.image_emb.shape[-1] == enhanced_context.shape[-1]:
+                                    # 如果维度匹配，直接融合
+                                    image_tokens = min(32, self.image_emb.shape[1])  # 限制使用的图像令牌数
+                                    ip_weight = weight * 0.3
+                                    enhanced_context[:, -image_tokens:, :] = \
+                                        (1.0 - ip_weight) * enhanced_context[:, -image_tokens:, :] + \
+                                        ip_weight * self.image_emb[:, :image_tokens, :]
+                                    print(f"成功应用简化版IP-Adapter，使用权重: {ip_weight}")
+                        except Exception as e:
+                            print(f"IP-Adapter应用失败: {str(e)}")
+                            traceback.print_exc()
+                    
+                    # 使用增强的context代替原始context
+                    context = enhanced_context
+                
+                # 注意: original_forward是一个已经绑定到对象的方法，不需要再传self
+                # 直接使用原始参数调用原始函数
+                return original_forward(x, timestep, context, y, guidance, control, transformer_options, **kwargs)
+                
+            except Exception as e:
+                print(f"应用InstantCharacter特征时出错: {str(e)}")
+                traceback.print_exc()
+                
+                # 如果处理失败，直接使用原始参数调用原始函数
+                try:
+                    # 同样移除self参数
+                    return original_forward(x, timestep, context, y, guidance, control, transformer_options, **kwargs)
+                except Exception as e2:
+                    print(f"尝试直接调用原始函数也失败: {str(e2)}")
+                    traceback.print_exc()
+                    # 如果所有尝试都失败，抛出原始异常
+                    raise e
+        
+        return custom_forward
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "reference_image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
+            }
+        }
+    
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "apply_instantcharacter"
+    CATEGORY = "InstantCharacter"
+    
+    def load_vision_models(self):
+        """加载视觉模型 (SigLIP和DINOv2)"""
+        if not self.valid:
+            print(f"错误: 无法加载InstantCharacter模型 - 缺失以下模型文件: {', '.join(self.missing_models)}")
+    def apply_instantcharacter(self, model, reference_image, weight):
+        """向模型添加InstantCharacter功能"""
+        if not self.valid:
+            print(f"警告: InstantCharacter模型路径不完整 - 缺失: {', '.join(self.missing_models)}")
+            print("返回原始模型")
+            return (model,)
+        
+        try:
+            print("=== 开始应用InstantCharacter到模型 ===")
+            
+            # 确保IP-Adapter模型被加载
+            if os.path.exists(self.ip_adapter_path) and not self.ip_adapter_loaded:
+                print("尝试加载IP-Adapter模型...")
+                self.load_ip_adapter()
+            
+            # 提取参考图像特征
+            if not self.extract_image_features(reference_image):
+                print("特征提取失败，返回原始模型")
+                return (model,)
+                
+            # 克隆模型以避免修改原始模型
+            print("克隆原始模型...")
+            enhanced_model = model.clone()
+            
+            # 为FLUX模型结构适配钩子
+            # 在ComfyUI中，FLUX模型的UNet在model.model中
+            print(f"应用InstantCharacter钩子，权重: {weight}")
+            try:
+                # 找到模型的UNet组件
+                unet = enhanced_model.model
+                
+                # 检查模型是否是FLUX模型
+                if hasattr(unet, "diffusion_model"):
+                    # 标准SD模型结构
+                    unet = unet.diffusion_model
+                    print("检测到标准SD模型结构，应用钩子到diffusion_model")
+                else:
+                    print("未检测到标准SD结构，尝试直接应用钩子")
+                
+                # 保存原始前向传播函数
+                if self.original_forward is None:
+                    self.original_forward = unet.forward
+                    print(f"保存了原始forward函数: {self.original_forward}")
+                
+                # 创建并应用自定义前向传播函数
+                custom_forward = self.custom_forward_wrapper(self.original_forward, weight)
+                unet.forward = types.MethodType(custom_forward, unet)
+                print("成功应用自定义forward函数")
+                
+            except Exception as e:
+                print(f"应用钩子失败: {str(e)}")
+                traceback.print_exc()
+                return (model,)
+            
+            # 保存元数据
+            enhanced_model.instantcharacter_enabled = True
+            enhanced_model.instantcharacter_weight = weight
+            
+            print("InstantCharacter已成功应用到模型")
+            print("您现在可以将此模型用于标准KSampler生成图像")
+            return (enhanced_model,)
+            
+        except Exception as e:
+            print(f"InstantCharacter应用失败: {str(e)}")
+            traceback.print_exc()
+            return (model,)
+
+# 添加模型路径到ComfyUI的搜索路径
+paths = load_instantcharacter_paths()
+folder_paths.add_model_folder_path("instantcharacter", paths["instantcharacter_dir"])
