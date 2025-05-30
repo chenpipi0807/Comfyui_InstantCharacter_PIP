@@ -1,8 +1,8 @@
 {
   "id": "9a68dd3b-2325-410c-a6f9-dd809511c4c4",
   "revision": 0,
-  "last_node_id": 440,
-  "last_link_id": 427,
+  "last_node_id": 443,
+  "last_link_id": 433,
   "nodes": [
     {
       "id": 10,
@@ -16,7 +16,7 @@
         58
       ],
       "flags": {},
-      "order": 8,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -56,7 +56,7 @@
         58
       ],
       "flags": {},
-      "order": 0,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -97,7 +97,7 @@
         106
       ],
       "flags": {},
-      "order": 28,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -147,7 +147,7 @@
         82
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -166,7 +166,7 @@
         "ver": "0.3.29"
       },
       "widgets_values": [
-        377083572583791,
+        192212549265790,
         "randomize"
       ],
       "color": "#223",
@@ -176,15 +176,15 @@
       "id": 26,
       "type": "FluxGuidance",
       "pos": [
-        1767.591796875,
-        1159.430908203125
+        1755.8427734375,
+        1078.56982421875
       ],
       "size": [
         315,
         58
       ],
       "flags": {},
-      "order": 29,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -232,14 +232,14 @@
         46
       ],
       "flags": {},
-      "order": 32,
+      "order": 27,
       "mode": 0,
       "inputs": [
         {
           "label": "模型",
           "name": "model",
           "type": "MODEL",
-          "link": 413
+          "link": 433
         },
         {
           "label": "条件",
@@ -284,7 +284,7 @@
         326
       ],
       "flags": {},
-      "order": 33,
+      "order": 28,
       "mode": 0,
       "inputs": [
         {
@@ -360,7 +360,7 @@
         46
       ],
       "flags": {},
-      "order": 34,
+      "order": 29,
       "mode": 0,
       "inputs": [
         {
@@ -412,7 +412,7 @@
         130
       ],
       "flags": {},
-      "order": 22,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -463,7 +463,7 @@
         170
       ],
       "flags": {},
-      "order": 25,
+      "order": 18,
       "mode": 0,
       "inputs": [
         {
@@ -525,17 +525,17 @@
       "id": 113,
       "type": "CLIPTextEncode",
       "pos": [
-        2455.629638671875,
-        323.3073425292969
+        2025.4317626953125,
+        659.6446533203125
       ],
       "size": [
         400,
         200
       ],
       "flags": {
-        "collapsed": true
+        "collapsed": false
       },
-      "order": 26,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -593,7 +593,7 @@
         126
       ],
       "flags": {},
-      "order": 21,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
@@ -656,7 +656,7 @@
         58
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -698,7 +698,7 @@
         58
       ],
       "flags": {},
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -740,7 +740,7 @@
         89.4203872680664
       ],
       "flags": {},
-      "order": 14,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -777,11 +777,11 @@
         1110.37890625
       ],
       "size": [
-        406.5768737792969,
-        110.32273864746094
+        330.4774475097656,
+        87.74376678466797
       ],
       "flags": {},
-      "order": 18,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -791,7 +791,7 @@
           "type": "MODEL",
           "links": [
             321,
-            421
+            428
           ]
         }
       ],
@@ -824,7 +824,7 @@
         106
       ],
       "flags": {},
-      "order": 4,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -868,7 +868,7 @@
         412.0389099121094
       ],
       "flags": {},
-      "order": 15,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -908,15 +908,15 @@
       "id": 354,
       "type": "SaveImage",
       "pos": [
-        2145.520751953125,
-        1334.9501953125
+        2178.210205078125,
+        1232.3187255859375
       ],
       "size": [
         373.3852844238281,
         797.1854248046875
       ],
       "flags": {},
-      "order": 35,
+      "order": 30,
       "mode": 0,
       "inputs": [
         {
@@ -955,7 +955,7 @@
         191.37799072265625
       ],
       "flags": {},
-      "order": 20,
+      "order": 16,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -978,7 +978,7 @@
         71.73226165771484
       ],
       "flags": {},
-      "order": 5,
+      "order": 9,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -1017,7 +1017,7 @@
         68.42792510986328
       ],
       "flags": {},
-      "order": 6,
+      "order": 10,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -1056,7 +1056,7 @@
         88
       ],
       "flags": {},
-      "order": 7,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1068,273 +1068,18 @@
       "bgcolor": "#653"
     },
     {
-      "id": 413,
-      "type": "DINOv2_Loader",
-      "pos": [
-        1389.9482421875,
-        4066.728759765625
-      ],
-      "size": [
-        369.1767883300781,
-        62.154022216796875
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "DINOV2_MODEL",
-          "type": "DINOV2_MODEL",
-          "links": [
-            405
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "DINOv2_Loader"
-      },
-      "widgets_values": [
-        "models/instantCharacter/dinov2-giant"
-      ]
-    },
-    {
-      "id": 414,
-      "type": "SigLIP_Loader",
-      "pos": [
-        1385.6229248046875,
-        3933.338623046875
-      ],
-      "size": [
-        385.27349853515625,
-        65.26953887939453
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "SIGLIP_MODEL",
-          "type": "SIGLIP_MODEL",
-          "links": [
-            404
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SigLIP_Loader"
-      },
-      "widgets_values": [
-        "models/instantCharacter/siglip-so400m-patch14-384"
-      ]
-    },
-    {
-      "id": 415,
-      "type": "IPAdapter_Loader",
-      "pos": [
-        1373.71533203125,
-        4198.4814453125
-      ],
-      "size": [
-        447.5363464355469,
-        63.994998931884766
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IP_ADAPTER_MODEL",
-          "type": "IP_ADAPTER_MODEL",
-          "links": [
-            406
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "IPAdapter_Loader"
-      },
-      "widgets_values": [
-        "models/instantCharacter/instantcharacter_ip-adapter.bin"
-      ]
-    },
-    {
-      "id": 416,
-      "type": "InstantCharacter",
-      "pos": [
-        1899.61181640625,
-        3828.8466796875
-      ],
-      "size": [
-        270,
-        138
-      ],
-      "flags": {},
-      "order": 23,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "name": "reference_image",
-          "type": "IMAGE",
-          "link": 407
-        },
-        {
-          "name": "siglip_model",
-          "type": "SIGLIP_MODEL",
-          "link": 404
-        },
-        {
-          "name": "dinov2_model",
-          "type": "DINOV2_MODEL",
-          "link": 405
-        },
-        {
-          "name": "ip_adapter_model",
-          "shape": 7,
-          "type": "IP_ADAPTER_MODEL",
-          "link": 406
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "InstantCharacter"
-      },
-      "widgets_values": [
-        1
-      ]
-    },
-    {
-      "id": 417,
-      "type": "LoadImage",
-      "pos": [
-        996.9642333984375,
-        3848.802734375
-      ],
-      "size": [
-        315.6220703125,
-        412.0389099121094
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "图像",
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            407
-          ]
-        },
-        {
-          "label": "遮罩",
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadImage",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        "微信截图_20250523140546.png",
-        "image"
-      ],
-      "color": "#332922",
-      "bgcolor": "#593930"
-    },
-    {
-      "id": 423,
-      "type": "InstantCharacter",
-      "pos": [
-        1830.739990234375,
-        1360.6151123046875
-      ],
-      "size": [
-        270,
-        138
-      ],
-      "flags": {},
-      "order": 30,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 421
-        },
-        {
-          "name": "reference_image",
-          "type": "IMAGE",
-          "link": 426
-        },
-        {
-          "name": "siglip_model",
-          "type": "SIGLIP_MODEL",
-          "link": 415
-        },
-        {
-          "name": "dinov2_model",
-          "type": "DINOV2_MODEL",
-          "link": 416
-        },
-        {
-          "name": "ip_adapter_model",
-          "shape": 7,
-          "type": "IP_ADAPTER_MODEL",
-          "link": 417
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            413
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "InstantCharacter"
-      },
-      "widgets_values": [
-        1.0000000000000002
-      ]
-    },
-    {
       "id": 424,
       "type": "SigLIP_Loader",
       "pos": [
-        1459.5108642578125,
-        1360.4755859375
+        1281.0523681640625,
+        1317.712158203125
       ],
       "size": [
-        299.649169921875,
-        58
+        400.06610107421875,
+        74.73617553710938
       ],
       "flags": {},
-      "order": 17,
+      "order": 14,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1342,7 +1087,7 @@
           "name": "SIGLIP_MODEL",
           "type": "SIGLIP_MODEL",
           "links": [
-            415
+            430
           ]
         }
       ],
@@ -1350,22 +1095,22 @@
         "Node name for S&R": "SigLIP_Loader"
       },
       "widgets_values": [
-        "siglip-base-patch16-384"
+        "siglip-so400m-patch14-384"
       ]
     },
     {
       "id": 425,
       "type": "DINOv2_Loader",
       "pos": [
-        1469.630126953125,
-        1505.1400146484375
+        1366.590087890625,
+        1479.380126953125
       ],
       "size": [
         303.32012939453125,
         58
       ],
       "flags": {},
-      "order": 19,
+      "order": 15,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1373,7 +1118,7 @@
           "name": "DINOV2_MODEL",
           "type": "DINOV2_MODEL",
           "links": [
-            416
+            431
           ]
         }
       ],
@@ -1388,15 +1133,15 @@
       "id": 426,
       "type": "IPAdapter_Loader",
       "pos": [
-        1472.361328125,
-        1632.319580078125
+        1386.285400390625,
+        1618.4970703125
       ],
       "size": [
         282.8739013671875,
         58
       ],
       "flags": {},
-      "order": 16,
+      "order": 13,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1404,7 +1149,7 @@
           "name": "IP_ADAPTER_MODEL",
           "type": "IP_ADAPTER_MODEL",
           "links": [
-            417
+            432
           ]
         }
       ],
@@ -1427,7 +1172,7 @@
         191.37799072265625
       ],
       "flags": {},
-      "order": 13,
+      "order": 12,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1450,10 +1195,11 @@
         122
       ],
       "flags": {},
-      "order": 27,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
+          "label": "image",
           "name": "image",
           "type": "IMAGE",
           "link": 425
@@ -1461,31 +1207,43 @@
       ],
       "outputs": [
         {
+          "label": "image",
           "name": "image",
           "type": "IMAGE",
           "links": [
-            426,
-            427
+            427,
+            429
           ]
         },
         {
+          "label": "width_int",
           "name": "width_int",
           "type": "INT",
           "links": null
         },
         {
+          "label": "height_int",
           "name": "height_int",
           "type": "INT",
           "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "PIP_longsize"
+        "Node name for S&R": "PIP_longsize",
+        "aux_id": "chenpipi0807/PIP_LONGSIZE",
+        "ver": "c7dac62db6a89b35d45a0dc3578d33fba9dc72e4",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
       },
       "widgets_values": [
         448,
         "无损输出"
-      ]
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
     },
     {
       "id": 435,
@@ -1499,10 +1257,11 @@
         122
       ],
       "flags": {},
-      "order": 24,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
+          "label": "image",
           "name": "image",
           "type": "IMAGE",
           "link": 424
@@ -1510,6 +1269,7 @@
       ],
       "outputs": [
         {
+          "label": "image",
           "name": "image",
           "type": "IMAGE",
           "links": [
@@ -1517,23 +1277,34 @@
           ]
         },
         {
+          "label": "width_int",
           "name": "width_int",
           "type": "INT",
           "links": null
         },
         {
+          "label": "height_int",
           "name": "height_int",
           "type": "INT",
           "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "PIP_ProportionalCrop"
+        "Node name for S&R": "PIP_ProportionalCrop",
+        "aux_id": "chenpipi0807/PIP_LONGSIZE",
+        "ver": "c7dac62db6a89b35d45a0dc3578d33fba9dc72e4",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
       },
       "widgets_values": [
         "1:1",
         "中心"
-      ]
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
     },
     {
       "id": 437,
@@ -1547,10 +1318,11 @@
         276.06048583984375
       ],
       "flags": {},
-      "order": 31,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
+          "label": "图像",
           "name": "images",
           "type": "IMAGE",
           "link": 427
@@ -1558,9 +1330,78 @@
       ],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "PreviewImage"
+        "Node name for S&R": "PreviewImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
       },
-      "widgets_values": []
+      "widgets_values": [],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 441,
+      "type": "InstantCharacter",
+      "pos": [
+        1806.42529296875,
+        1258.23876953125
+      ],
+      "size": [
+        270,
+        138
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 428
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": 429
+        },
+        {
+          "name": "siglip_model",
+          "shape": 7,
+          "type": "SIGLIP_MODEL",
+          "link": 430
+        },
+        {
+          "name": "dinov2_model",
+          "shape": 7,
+          "type": "DINOV2_MODEL",
+          "link": 431
+        },
+        {
+          "name": "ip_adapter_model",
+          "shape": 7,
+          "type": "IP_ADAPTER_MODEL",
+          "link": 432
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            433
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InstantCharacter"
+      },
+      "widgets_values": [
+        1
+      ]
     }
   ],
   "links": [
@@ -1717,78 +1558,6 @@
       "LATENT"
     ],
     [
-      404,
-      414,
-      0,
-      416,
-      2,
-      "SIGLIP_MODEL"
-    ],
-    [
-      405,
-      413,
-      0,
-      416,
-      3,
-      "DINOV2_MODEL"
-    ],
-    [
-      406,
-      415,
-      0,
-      416,
-      4,
-      "IP_ADAPTER_MODEL"
-    ],
-    [
-      407,
-      417,
-      0,
-      416,
-      1,
-      "IMAGE"
-    ],
-    [
-      413,
-      423,
-      0,
-      47,
-      0,
-      "MODEL"
-    ],
-    [
-      415,
-      424,
-      0,
-      423,
-      2,
-      "SIGLIP_MODEL"
-    ],
-    [
-      416,
-      425,
-      0,
-      423,
-      3,
-      "DINOV2_MODEL"
-    ],
-    [
-      417,
-      426,
-      0,
-      423,
-      4,
-      "IP_ADAPTER_MODEL"
-    ],
-    [
-      421,
-      351,
-      0,
-      423,
-      0,
-      "MODEL"
-    ],
-    [
       424,
       353,
       0,
@@ -1805,20 +1574,60 @@
       "IMAGE"
     ],
     [
-      426,
-      434,
-      0,
-      423,
-      1,
-      "IMAGE"
-    ],
-    [
       427,
       434,
       0,
       437,
       0,
       "IMAGE"
+    ],
+    [
+      428,
+      351,
+      0,
+      441,
+      0,
+      "MODEL"
+    ],
+    [
+      429,
+      434,
+      0,
+      441,
+      1,
+      "IMAGE"
+    ],
+    [
+      430,
+      424,
+      0,
+      441,
+      2,
+      "SIGLIP_MODEL"
+    ],
+    [
+      431,
+      425,
+      0,
+      441,
+      3,
+      "DINOV2_MODEL"
+    ],
+    [
+      432,
+      426,
+      0,
+      441,
+      4,
+      "IP_ADAPTER_MODEL"
+    ],
+    [
+      433,
+      441,
+      0,
+      47,
+      0,
+      "MODEL"
     ]
   ],
   "groups": [
@@ -1841,8 +1650,8 @@
     "ds": {
       "scale": 0.45,
       "offset": [
-        1508.2591289412046,
-        119.55015217539906
+        -351.53725748769943,
+        -834.8450128219291
       ]
     },
     "frontendVersion": "1.18.9",
