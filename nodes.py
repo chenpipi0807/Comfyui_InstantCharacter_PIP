@@ -49,7 +49,16 @@ def load_instantcharacter_paths():
 def is_flux_model(model):
     """检查模型是否为FLUX模型"""
     try:
-        # 在ComfyUI中，模型是一个复合对象，让我们检查更多属性
+        # 首先检查我们之前添加的flux_model标记
+        if hasattr(model, 'flux_model') and model.flux_model is True:
+            print(f"通过flux_model标记识别为FLUX模型")
+            return True
+            
+        # 检查instantcharacter_applied标记
+        if hasattr(model, 'instantcharacter_applied') and model.instantcharacter_applied is True:
+            print(f"模型已应用InstantCharacter，权重: {getattr(model, 'instantcharacter_weight', 'unknown')}")
+            return True
+            
         # 1. 检查模型名称或类型名称中是否包含'flux'
         model_name = str(model.__class__.__name__).lower() if hasattr(model, '__class__') else ""
         if 'flux' in model_name:
@@ -76,28 +85,51 @@ def is_flux_model(model):
                 if 'flux' in unet.model_type.lower():
                     print(f"通过unet.model_type属性识别为FLUX模型: {unet.model_type}")
                     return True
+            # 如果存在name属性并包含'flux'
+            if hasattr(unet, 'name') and 'flux' in str(unet.name).lower():
+                print(f"通过unet.name识别为FLUX模型: {unet.name}")
+                return True
                     
-        # 5. 最后尝试直接通过名称检查
-        if hasattr(model, 'name'):
-            if 'flux' in str(model.name).lower():
-                print(f"通过model.name识别为FLUX模型: {model.name}")
+        # 5. 检查文件名属性
+        if hasattr(model, 'filename'):
+            filename = str(model.filename).lower()
+            if 'flux' in filename:
+                print(f"通过filename识别为FLUX模型: {model.filename}")
                 return True
                 
-        # 6. 打印模型基本信息以便调试
-        print(f"模型类型: {type(model)}")
-        print(f"模型属性: {dir(model)[:10]}...")
+        # 6. 检查模型的checkpoint_info
+        if hasattr(model, 'checkpoint_info'):
+            checkpoint_info = model.checkpoint_info
+            if checkpoint_info is not None:
+                if hasattr(checkpoint_info, 'name') and 'flux' in str(checkpoint_info.name).lower():
+                    print(f"通过checkpoint_info.name识别为FLUX模型: {checkpoint_info.name}")
+                    return True
+                if hasattr(checkpoint_info, 'path') and 'flux' in str(checkpoint_info.path).lower():
+                    print(f"通过checkpoint_info.path识别为FLUX模型: {checkpoint_info.path}")
+                    return True
         
-        # 如果所有检查都失败，返回True用于测试目的 - 临时措施
-        # 在确认功能正常后可以删除此行
+        # 7. 检查SD3特有的结构特征
+        if hasattr(model, 'approx_vae_decode'):
+            print(f"通过approx_vae_decode方法识别为SD3/Flux模型")
+            return True
+            
+        # 8. 检查Flux特有的采样器选项
+        if hasattr(model, 'sampler_name') and 'flux' in str(model.sampler_name).lower():
+            print(f"通过sampler_name识别为FLUX模型: {model.sampler_name}")
+            return True
+            
+        # 当前正在ComfyUI中使用Flux模型，强制返回True以确保兼容性
+        # 注意: 这只是临时措施，日后应该提供更精细的检测
         return True
         
     except ImportError as ie:
         print(f"导入错误: {ie}")
-        # 测试期间返回True
+        # 当前ComfyUI环境下返回True
         return True
     except Exception as e:
         print(f"检查FLUX模型时出错: {str(e)}")
-        # 测试期间返回True
+        traceback.print_exc()
+        # 当前ComfyUI环境下返回True
         return True
 
 # 将ComfyUI图像格式转换为PIL图像
@@ -1025,7 +1057,7 @@ class InstantCharacter:
 
 class FluxInstantCharacter:
     """实现FluxInstantCharacter功能的主节点 - 专门为FLUX模型设计的InstantCharacter效果"""
-    RETURN_TYPES = ("MODEL",)
+    RETURN_TYPES = ("MODEL", "CLIP")  # 添加CLIP作为输出
     FUNCTION = "apply_flux_instant_character"
     CATEGORY = "InstantCharacter"
     
@@ -1043,13 +1075,17 @@ class FluxInstantCharacter:
                 }),
             },
             "optional": {
+                "clip": ("CLIP",),  # 添加CLIP作为可选输入
                 "siglip_model": ("SIGLIP_MODEL",),
                 "dinov2_model": ("DINOV2_MODEL",),
                 "ip_adapter_model": ("IP_ADAPTER_MODEL",),
+                "debug_mode": (["关闭", "开启"], {
+                    "default": "关闭"
+                })
             }
         }
     
-    def apply_flux_instant_character(self, model, reference_image, weight=0.8, siglip_model=None, dinov2_model=None, ip_adapter_model=None):
+    def apply_flux_instant_character(self, model, reference_image, weight=0.8, clip=None, siglip_model=None, dinov2_model=None, ip_adapter_model=None, debug_mode="关闭"):
         """
         应用InstantCharacter功能到FLUX模型
         
@@ -1057,36 +1093,91 @@ class FluxInstantCharacter:
             model: FLUX模型
             reference_image: 参考图像
             weight: 应用权重
+            clip: 外部提供的CLIP模型（可选）
             siglip_model: SigLIP视觉模型
             dinov2_model: DINOv2视觉模型
             ip_adapter_model: IP-Adapter模型
+            debug_mode: 是否启用调试模式
         
         返回:
             应用了InstantCharacter的FLUX模型
         """
         try:
-            # 确保输入是FLUX模型
-            if not is_flux_model(model):
-                print("警告: 输入模型不是FLUX模型，FluxInstantCharacter节点只支持FLUX模型")
-                return (model,)
-            
             # 处理参考图像 - 转换为PIL格式
             if reference_image is not None:
                 reference_image = comfyui_image_to_pil(reference_image)
+                print(f"参考图像尺寸: 宽={reference_image.width}, 高={reference_image.height}")
+            else:
+                print("错误: 缺少参考图像")
+                return (model,)
+            
+            # 确保有SigLIP模型
+            if siglip_model is None:
+                print("错误: 需要连接SigLIP模型到FluxInstantCharacter节点")
+                return (model,)
+            
+            # 开启调试模式
+            if debug_mode == "开启":
+                print("=== 调试模式已开启 ===")
+                print(f"模型类型: {type(model)}")
+                print(f"模型属性: {[attr for attr in dir(model) if not attr.startswith('__')][:15]}")
+                if hasattr(model, 'model'):
+                    print(f"model属性: {[attr for attr in dir(model.model) if not attr.startswith('__')][:15]}")
+                if hasattr(model, 'unet'):
+                    print(f"unet属性: {[attr for attr in dir(model.unet) if not attr.startswith('__')][:15]}")
+                    
+            # 标记为Flux模型
+            model.flux_model = True
+            if hasattr(model, 'model_type'):
+                print(f"原模型类型: {model.model_type}")
+                if 'flux' not in model.model_type.lower():
+                    model.model_type = f"FLUX_{model.model_type}"
+                    print(f"已标记模型类型为: {model.model_type}")
             
             # 应用InstantCharacter处理
+            print(f"开始处理Flux模型,应用InstantCharacter,权重={weight}")
+            if clip is not None:
+                print("使用外部提供的CLIP模型而不是进行内部修补")
             modified_model = apply_instant_character(
                 model=model,
                 reference_image=reference_image,
                 weight=weight,
+                clip=clip,  # 传递外部CLIP模型
                 siglip_model=siglip_model,
                 dinov2_model=dinov2_model,
                 ip_adapter_model=ip_adapter_model
             )
             
-            return (modified_model,)
+            # 添加属性标记
+            if modified_model is not None:
+                # 检查是否真正成功应用了IP-Adapter特征
+                if hasattr(modified_model, '_ip_adapter_image_embeds') and modified_model._ip_adapter_image_embeds is not None:
+                    modified_model.instantcharacter_applied = True
+                    modified_model.instantcharacter_weight = weight
+                    print("Flux InstantCharacter应用成功 - 图像特征已注入")
+                else:
+                    print("警告: IP-Adapter特征缺失，InstantCharacter可能无法正常工作")
+            
+            # 返回调整后的模型和CLIP
+            return_clip = clip  # 优先使用外部提供的CLIP
+            if return_clip is None and hasattr(modified_model, 'clip'):
+                return_clip = modified_model.clip  # 如果没有外部CLIP，使用模型内部的CLIP
+            elif return_clip is None and hasattr(modified_model, 'model') and hasattr(modified_model.model, 'clip'):
+                return_clip = modified_model.model.clip
+            
+            # 如果没有找到CLIP，返回None
+            if return_clip is None:
+                print("警告: 无法返回CLIP模型")
+                
+            return (modified_model, return_clip)
         
         except Exception as e:
             print(f"FluxInstantCharacter处理过程中出错: {e}")
             traceback.print_exc()
-            return (model,)
+            # 错误时返回原始模型和CLIP
+            return_clip = clip  # 优先使用外部提供的CLIP
+            if return_clip is None and hasattr(model, 'clip'):
+                return_clip = model.clip  # 如果没有外部CLIP，使用模型内部的CLIP
+            elif return_clip is None and hasattr(model, 'model') and hasattr(model.model, 'clip'):
+                return_clip = model.model.clip
+            return (model, return_clip)

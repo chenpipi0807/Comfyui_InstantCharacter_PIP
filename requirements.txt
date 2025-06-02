@@ -10,3 +10,4 @@ sentencepiece
 transformers
 timm
 sageattention
+einops
