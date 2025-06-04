@@ -1,0 +1,123 @@
+
+这个还没下载完
+C:\InstantCharacter\flux-model>tree /f
+卷 系统 的文件夹 PATH 列表
+卷序列号为 001C-C009
+C:.
+│  .gitattributes
+│  ae.safetensors
+│  dev_grid.jpg
+│  LICENSE.md
+│  model_index.json
+│  README.md
+│
+├─.cache
+│  └─huggingface
+│      │  .gitignore
+│      │
+│      └─download
+│          │  .gitattributes.metadata
+│          │  ae.safetensors.metadata
+│          │  dev_grid.jpg.metadata
+│          │  flux1-dev.safetensors.lock
+│          │  LICENSE.md.metadata
+│          │  model_index.json.metadata
+│          │  README.md.metadata
+│          │  Smp-gjyJObUFs5C0WYkxGzMzRdU=.4610115bb0c89560703c892c59ac2742fa821e60ef5871b33493ba544683abd7.incomplete
+│          │
+│          ├─scheduler
+│          │      scheduler_config.json.metadata
+│          │
+│          ├─text_encoder
+│          │      config.json.metadata
+│          │
+│          ├─text_encoder_2
+│          │      aoe4E07IMh7reFyUkVoVk040mQk=.ec87bffd1923e8b2774a6d240c922a41f6143081d52cf83b8fe39e9d838c893e.incomplete
+│          │      model.safetensors.index.json.metadata
+│          │
+│          ├─tokenizer
+│          │      merges.txt.metadata
+│          │      special_tokens_map.json.metadata
+│          │      vocab.json.metadata
+│          │      vzaExXFZNBay89bvlQv-ZcI6BTg=.180a4e1be2a7d0b38a44108d6f24f585f35147b1.incomplete
+│          │
+│          ├─tokenizer_2
+│          │      HgM_lKo9sdSCfRtVg7MMFS7EKqo=.21ed409afa3df5a822caa0fd5da30d13941f90b5.incomplete
+│          │      special_tokens_map.json.metadata
+│          │      vzaExXFZNBay89bvlQv-ZcI6BTg=.b336fa236135e6c87e246485e4d69e415cc57da0.incomplete
+│          │
+│          ├─transformer
+│          │      5n3ByLHcDVGl-4O5UeVdJRvodxk=.d86a3038eacaa720682cb9b1da3c49fecf8a3ded605af4def6061eaa18903eb8.incomplete
+│          │      config.json.metadata
+│          │      diffusion_pytorch_model-00001-of-00003.safetensors.lock
+│          │      diffusion_pytorch_model-00002-of-00003.safetensors.lock
+│          │      diffusion_pytorch_model.safetensors.index.json.metadata
+│          │      xIb00LLWe-iHth2j35r6TGIYKx8=.5e830704a83aa938dfaf23da308100a1c44b83fa084283abf1d163ea727e5f7a.incomplete
+│          │
+│          └─vae
+│                  8_PA_wEVGiVa2goH2H4KQOQpvVY=.4f7c628fc8e59fc842c9846ed74414249052ba0b.incomplete
+│                  diffusion_pytorch_model.safetensors.metadata
+│
+├─scheduler
+│      scheduler_config.json
+│
+├─text_encoder
+│      config.json
+│
+├─text_encoder_2
+│      model.safetensors.index.json
+│
+├─tokenizer
+│      merges.txt
+│      special_tokens_map.json
+│      vocab.json
+│
+├─tokenizer_2
+│      special_tokens_map.json
+│
+├─transformer
+│      config.json
+│      diffusion_pytorch_model.safetensors.index.json
+│
+└─vae
+        diffusion_pytorch_model.safetensors
+
+
+C:\InstantCharacter\flux-model>
+
+
+
+
+
+{
+  "_class_name": "FluxPipeline",
+  "_diffusers_version": "0.30.0.dev0",
+  "scheduler": [
+    "diffusers",
+    "FlowMatchEulerDiscreteScheduler"
+  ],
+  "text_encoder": [
+    "transformers",
+    "CLIPTextModel"
+  ],
+  "text_encoder_2": [
+    "transformers",
+    "T5EncoderModel"
+  ],
+  "tokenizer": [
+    "transformers",
+    "CLIPTokenizer"
+  ],
+  "tokenizer_2": [
+    "transformers",
+    "T5TokenizerFast"
+  ],
+  "transformer": [
+    "diffusers",
+    "FluxTransformer2DModel"
+  ],
+  "vae": [
+    "diffusers",
+    "AutoencoderKL"
+  ]
+}

@@ -183,29 +183,19 @@ class SigLIP_Loader:
             model_path = self.siglip_models[model_name]
         else:
             print(f"错误: 无效的SigLIP模型名称: {model_name}")
-            # 默认使用第一个可用的模型
-            model_name = list(self.siglip_models.keys())[0]
-            model_path = self.siglip_models[model_name]
-            print(f"将使用默认模型: {model_name}")
+            # 直接返回错误，不追加备用模型，使用分离值而不是元组
+            return None, None
         
         # 检查路径是否存在
         if not os.path.exists(model_path):
             print(f"错误: SigLIP模型路径不存在: {model_path}")
-            # 尝试使用另一个模型作为备用
-            for backup_name, backup_path in self.siglip_models.items():
-                if os.path.exists(backup_path) and backup_name != model_name:
-                    model_name = backup_name
-                    model_path = backup_path
-                    print(f"将使用备用模型: {model_name}")
-                    break
-            else:
-                print("所有SigLIP模型路径都不可用")
-                # 返回空模型元组而不是None，避免后续错误
-                return (None, None)
+            # 返回空模型和处理器，不尝试备用模型，使用分离值而不是元组
+            return None, None
         
         # 如果模型已经加载并且是同一个模型，直接返回
         if self.siglip_model is not None and self.current_model_key == model_name:
-            return (self.siglip_model, self.siglip_processor)
+            # 返回分离的模型和处理器，而不是元组
+            return self.siglip_model, self.siglip_processor
         
         # 加载新模型
         try:
@@ -215,12 +205,13 @@ class SigLIP_Loader:
             self.siglip_processor = AutoProcessor.from_pretrained(model_path)
             self.current_model_key = model_name
             print(f"SigLIP模型 '{model_name}' 加载成功")
-            return (self.siglip_model, self.siglip_processor)
+            # 返回分离的模型和处理器，而不是元组
+            return self.siglip_model, self.siglip_processor
         except Exception as e:
             print(f"加载SigLIP模型失败: {str(e)}")
             traceback.print_exc()
-            # 返回空模型元组而不是None，避免后续错误
-            return (None, None)
+            # 返回空模型和处理器，避免后续错误，使用分离值而不是元组
+            return None, None
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -230,7 +221,8 @@ class SigLIP_Loader:
             }
         }
     
-    RETURN_TYPES = ("SIGLIP_MODEL",)
+    # 分别返回模型和处理器，而不是元组
+    RETURN_TYPES = ("SIGLIP_MODEL", "SIGLIP_PROCESSOR")
     FUNCTION = "load_model"
     CATEGORY = "InstantCharacter"
 
@@ -260,29 +252,19 @@ class DINOv2_Loader:
             model_path = self.dinov2_models[model_name]
         else:
             print(f"错误: 无效的DINOv2模型名称: {model_name}")
-            # 默认使用第一个可用的模型
-            model_name = list(self.dinov2_models.keys())[0]
-            model_path = self.dinov2_models[model_name]
-            print(f"将使用默认模型: {model_name}")
+            # 直接返回错误，不追加备用模型，使用分离值而不是元组
+            return None, None
         
         # 检查路径是否存在
         if not os.path.exists(model_path):
             print(f"错误: DINOv2模型路径不存在: {model_path}")
-            # 尝试使用另一个模型作为备用
-            for backup_name, backup_path in self.dinov2_models.items():
-                if os.path.exists(backup_path) and backup_name != model_name:
-                    model_name = backup_name
-                    model_path = backup_path
-                    print(f"将使用备用模型: {model_name}")
-                    break
-            else:
-                print("所有DINOv2模型路径都不可用")
-                # 返回空模型元组而不是None，避免后续错误
-                return (None, None)
+            # 返回空模型和处理器，不尝试备用模型，使用分离值而不是元组
+            return None, None
         
         # 如果模型已经加载并且是同一个模型，直接返回
         if self.dinov2_model is not None and self.current_model_key == model_name:
-            return (self.dinov2_model, self.dinov2_processor)
+            # 返回分离的模型和处理器，而不是元组
+            return self.dinov2_model, self.dinov2_processor
         
         # 加载新模型
         try:
@@ -292,12 +274,13 @@ class DINOv2_Loader:
             self.dinov2_processor = AutoProcessor.from_pretrained(model_path)
             self.current_model_key = model_name
             print(f"DINOv2模型 '{model_name}' 加载成功")
-            return (self.dinov2_model, self.dinov2_processor)
+            # 返回分离的模型和处理器，而不是元组
+            return self.dinov2_model, self.dinov2_processor
         except Exception as e:
             print(f"加载DINOv2模型失败: {str(e)}")
             traceback.print_exc()
-            # 返回空模型元组而不是None，避免后续错误
-            return (None, None)
+            # 返回空模型和处理器，避免后续错误，使用分离值而不是元组
+            return None, None
     
     @classmethod
     def INPUT_TYPES(cls):
@@ -307,7 +290,8 @@ class DINOv2_Loader:
             }
         }
     
-    RETURN_TYPES = ("DINOV2_MODEL",)
+    # 分别返回模型和处理器，而不是元组
+    RETURN_TYPES = ("DINOV2_MODEL", "DINOV2_PROCESSOR")
     FUNCTION = "load_model"
     CATEGORY = "InstantCharacter"
 
@@ -357,24 +341,13 @@ class IPAdapter_Loader:
             # 加载IP-Adapter模型
             self.ip_adapter = torch.load(self.ip_adapter_path, map_location=device)
             
-            # 由于IP-Adapter模型可能是字典，我们不再尝试附加方法
-            # 我们会在使用时直接返回模型本身
+            # IP-Adapter模型被直接作为字典对象使用
             print(f"IP-Adapter模型已加载成功，类型: {type(self.ip_adapter)}")
             
-            # 如果是字典，可以检查其关键组件
+            # 如果是字典，显示其关键组件
             if isinstance(self.ip_adapter, dict):
                 print(f"IP-Adapter模型包含以下键: {list(self.ip_adapter.keys())}")
-            else:
-                # 对于对象类型，我们可能仍然可以附加方法
-                try:
-                    def extract_features(self, image):
-                        print(f"IP-Adapter特征提取准备就绪")
-                        return self.ip_adapter
-                    
-                    self.ip_adapter.extract_features = types.MethodType(extract_features, self.ip_adapter)
-                except Exception as e:
-                    print(f"无法附加extract_features方法: {e}")
-                    # 继续执行，因为我们可以在其他地方处理这种情况
+            # 不尝试附加或扩展模型方法
             
             self.ip_adapter_loaded = True
             print("IP-Adapter模型加载成功")
@@ -442,41 +415,26 @@ class InstantCharacter:
                 # 检查模型类型，更灾全地处理不同的模型结构
                 print(f"检查SigLIP模型类型: {type(siglip_model)}")
                 
-                if isinstance(siglip_model, tuple) and len(siglip_model) >= 2:
-                    print("检测到SigLIP模型和处理器元组")
+                # 仅从提供的模型元组中提取处理器，不尝试自动创建
+                if isinstance(siglip_model, tuple) and len(siglip_model) == 2:
+                    print("从元组中提取SigLIP模型和处理器")
                     siglip_model_obj = siglip_model[0]
                     siglip_processor = siglip_model[1]
-                elif hasattr(siglip_model, 'processor') and siglip_model.processor is not None:
-                    print("从模型对象中检测到processor属性")
-                    siglip_model_obj = siglip_model
-                    siglip_processor = siglip_model.processor
-                elif hasattr(siglip_model, 'image_processor') and siglip_model.image_processor is not None:
-                    print("从模型对象中检测到image_processor属性")
-                    siglip_model_obj = siglip_model
-                    siglip_processor = siglip_model.image_processor
                 else:
-                    # 尝试使用transformers重新获取处理器
-                    try:
-                        from transformers import SiglipProcessor, AutoProcessor
-                        print("尝试使用transformers获取SigLIP处理器")
-                        siglip_model_obj = siglip_model
-                        try:
-                            siglip_processor = AutoProcessor.from_pretrained("google/siglip-base-patch16-384")
-                            print("使用AutoProcessor成功加载SigLIP处理器")
-                        except:
-                            siglip_processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-384")
-                            print("使用SiglipProcessor成功加载SigLIP处理器")
-                    except Exception as e:
-                        print(f"无法加载SigLIP处理器: {e}")
-                        # 如果处理器仍然不可用，使用基本图像处理方式
-                        siglip_model_obj = siglip_model
-                        siglip_processor = None
-                        print("警告: 无法找到SigLIP处理器，将使用基本图像处理")
+                    # 不尝试自动创建处理器或使用其他来源
+                    print(f"错误: SigLIP模型必须提供为包含模型和处理器的元组")
+                    siglip_model_obj = None
+                    siglip_processor = None
                 
                 # 日志输出结果
                 print(f"SigLIP模型对象类型: {type(siglip_model_obj)}")
-                print(f"SigLIP处理器类型: {type(siglip_processor) if siglip_processor else 'None'}")
+                print(f"SigLIP处理器类型: {type(siglip_processor) if siglip_processor else 'None'}")                
                 
+                # 明确检查处理器存在性
+                if siglip_processor is None or siglip_model_obj is None:
+                    print("错误: SigLIP模型或处理器不存在，无法继续处理")
+                    return (model,)
+                    
                 # 准备图像处理
                 # 将原始图像调整为384x384
                 object_image_pil_low_res = [pil_image.resize((384, 384))]
@@ -571,48 +529,25 @@ class InstantCharacter:
                 # 检查模型类型，更灾全地处理不同的模型结构
                 print(f"检查DINOv2模型类型: {type(dinov2_model)}")
                 
-                if isinstance(dinov2_model, tuple) and len(dinov2_model) >= 2:
-                    print("检测到DINOv2模型和处理器元组")
+                # 仅从提供的模型元组中提取处理器，不尝试自动创建
+                if isinstance(dinov2_model, tuple) and len(dinov2_model) == 2:
+                    print("从元组中提取DINOv2模型和处理器")
                     dinov2_model_obj = dinov2_model[0]
                     dinov2_processor = dinov2_model[1]
-                elif hasattr(dinov2_model, 'processor') and dinov2_model.processor is not None:
-                    print("从模型对象中检测到processor属性")
-                    dinov2_model_obj = dinov2_model
-                    dinov2_processor = dinov2_model.processor
-                elif hasattr(dinov2_model, 'image_processor') and dinov2_model.image_processor is not None:
-                    print("从模型对象中检测到image_processor属性")
-                    dinov2_model_obj = dinov2_model
-                    dinov2_processor = dinov2_model.image_processor
                 else:
-                    # 尝试使用transformers重新获取处理器
-                    try:
-                        from transformers import AutoProcessor
-                        print("尝试使用transformers获取DINOv2处理器")
-                        dinov2_model_obj = dinov2_model
-                        try:
-                            dinov2_processor = AutoProcessor.from_pretrained("facebook/dinov2-giant")
-                            print("使用AutoProcessor成功加载DINOv2处理器")
-                        except Exception as e:
-                            print(f"使用AutoProcessor无法加载DINOv2处理器: {e}")
-                            # 尝试其他方法
-                            try:
-                                from transformers import ViTImageProcessor
-                                dinov2_processor = ViTImageProcessor.from_pretrained("facebook/dinov2-giant")
-                                print("使用ViTImageProcessor成功加载DINOv2处理器")
-                            except Exception as e2:
-                                print(f"使用ViTImageProcessor也无法加载DINOv2处理器: {e2}")
-                                # 仍然失败，设置为None
-                                dinov2_processor = None
-                    except Exception as e:
-                        print(f"无法加载DINOv2处理器: {e}")
-                        # 如果处理器仍然不可用，使用基本图像处理方式
-                        dinov2_model_obj = dinov2_model
-                        dinov2_processor = None
-                        print("警告: 无法找到DINOv2处理器，将使用基本图像处理")
+                    # 不尝试自动创建处理器或使用其他来源
+                    print(f"错误: DINOv2模型必须提供为包含模型和处理器的元组")
+                    dinov2_model_obj = None
+                    dinov2_processor = None
                 
                 # 日志输出结果
                 print(f"DINOv2模型对象类型: {type(dinov2_model_obj)}")
-                print(f"DINOv2处理器类型: {type(dinov2_processor) if dinov2_processor else 'None'}")
+                print(f"DINOv2处理器类型: {type(dinov2_processor) if dinov2_processor else 'None'}")                
+                
+                # 明确检查处理器存在性
+                if dinov2_processor is None or dinov2_model_obj is None:
+                    print("错误: DINOv2模型或处理器缺失，无法继续处理")
+                    return (model,)
                 
                 # 使用相同的低分辨率图像
                 object_image_pil_low_res = [pil_image.resize((384, 384))]
@@ -1057,7 +992,7 @@ class InstantCharacter:
 
 class FluxInstantCharacter:
     """实现FluxInstantCharacter功能的主节点 - 专门为FLUX模型设计的InstantCharacter效果"""
-    RETURN_TYPES = ("MODEL", "CLIP")  # 添加CLIP作为输出
+    RETURN_TYPES = ("MODEL", "CONDITIONING")  # 将CLIP改为CONDITIONING作为输出
     FUNCTION = "apply_flux_instant_character"
     CATEGORY = "InstantCharacter"
     
@@ -1075,9 +1010,11 @@ class FluxInstantCharacter:
                 }),
             },
             "optional": {
-                "clip": ("CLIP",),  # 添加CLIP作为可选输入
-                "siglip_model": ("SIGLIP_MODEL",),
-                "dinov2_model": ("DINOV2_MODEL",),
+                "conditioning": ("CONDITIONING",),  # 使用条件特征作为可选输入
+                "siglip_model": ("SIGLIP_MODEL",),  # 接收SigLIP模型
+                "siglip_processor": ("SIGLIP_PROCESSOR",),  # 新增单独的SigLIP处理器输入
+                "dinov2_model": ("DINOV2_MODEL",),  # 接收DINOv2模型
+                "dinov2_processor": ("DINOV2_PROCESSOR",),  # 新增单独的DINOv2处理器输入
                 "ip_adapter_model": ("IP_ADAPTER_MODEL",),
                 "debug_mode": (["关闭", "开启"], {
                     "default": "关闭"
@@ -1085,7 +1022,7 @@ class FluxInstantCharacter:
             }
         }
     
-    def apply_flux_instant_character(self, model, reference_image, weight=0.8, clip=None, siglip_model=None, dinov2_model=None, ip_adapter_model=None, debug_mode="关闭"):
+    def apply_flux_instant_character(self, model, reference_image, weight=0.8, conditioning=None, siglip_model=None, siglip_processor=None, dinov2_model=None, dinov2_processor=None, ip_adapter_model=None, debug_mode="关闭"):
         """
         应用InstantCharacter功能到FLUX模型
         
@@ -1093,9 +1030,11 @@ class FluxInstantCharacter:
             model: FLUX模型
             reference_image: 参考图像
             weight: 应用权重
-            clip: 外部提供的CLIP模型（可选）
+            conditioning: 外部提供的条件特征（可选）
             siglip_model: SigLIP视觉模型
+            siglip_processor: SigLIP处理器
             dinov2_model: DINOv2视觉模型
+            dinov2_processor: DINOv2处理器
             ip_adapter_model: IP-Adapter模型
             debug_mode: 是否启用调试模式
         
@@ -1134,17 +1073,75 @@ class FluxInstantCharacter:
                     model.model_type = f"FLUX_{model.model_type}"
                     print(f"已标记模型类型为: {model.model_type}")
             
-            # 应用InstantCharacter处理
+            # 备份直接传入的处理器参数
+            _input_siglip_processor = siglip_processor
+            _input_dinov2_processor = dinov2_processor
+            
+            # 提取SigLIP处理器 - 增加详细调试信息
+            print(f"SigLIP模型类型: {type(siglip_model)}")
+            # 优先使用直接传入的处理器
+            if _input_siglip_processor is not None:
+                siglip_processor = _input_siglip_processor
+                print(f"使用直接传入的SigLIP处理器")
+            elif isinstance(siglip_model, tuple):
+                print(f"SigLIP模型是元组，长度: {len(siglip_model)}")
+                if len(siglip_model) >= 2:
+                    print(f"从元组中提取SigLIP处理器，元组内容类型: [{type(siglip_model[0])}, {type(siglip_model[1])}]")
+                    siglip_processor = siglip_model[1]
+                    siglip_model = siglip_model[0]
+                else:
+                    print(f"警告: SigLIP模型元组长度不足，无法提取处理器")
+            elif hasattr(siglip_model, 'processor') and siglip_model.processor is not None:
+                siglip_processor = siglip_model.processor
+                print(f"从模型对象中提取SigLIP处理器，处理器类型: {type(siglip_processor)}")
+            else:
+                print(f"警告: 无法从SigLIP模型中提取处理器")
+                
+            print(f"提取后的SigLIP处理器类型: {type(siglip_processor) if siglip_processor else 'None'}")
+            print(f"提取后的SigLIP模型类型: {type(siglip_model)}")
+            
+            # 提取DINOv2处理器
+            print(f"DINOv2模型类型: {type(dinov2_model) if dinov2_model else 'None'}")
+            print(f"直接传入的DINOv2处理器类型: {type(_input_dinov2_processor) if _input_dinov2_processor else 'None'}")
+            
+            # 优先使用直接传入的处理器
+            if _input_dinov2_processor is not None:
+                dinov2_processor = _input_dinov2_processor
+                print("使用直接传入的DINOv2处理器")
+            # 如果没有直接传入处理器，则尝试从其他源获取
+            elif isinstance(dinov2_model, tuple) and len(dinov2_model) >= 2:
+                print("从元组中提取DINOv2处理器")
+                dinov2_processor = dinov2_model[1]
+                dinov2_model = dinov2_model[0]
+            elif hasattr(dinov2_model, 'processor') and dinov2_model.processor is not None:
+                dinov2_processor = dinov2_model.processor
+                print("从模型对象中提取DINOv2处理器")
+            elif hasattr(dinov2_model, 'image_processor') and dinov2_model.image_processor is not None:
+                dinov2_processor = dinov2_model.image_processor
+                print("从相关属性中提取DINOv2处理器")
+            
+            # 应用InstantCharacter处理 - 增加调试信息
             print(f"开始处理Flux模型,应用InstantCharacter,权重={weight}")
-            if clip is not None:
-                print("使用外部提供的CLIP模型而不是进行内部修补")
+            if conditioning is not None:
+                print("使用外部提供的条件特征而不是进行内部处理")
+                
+            # 打印所有关键参数类型
+            print(f"调用apply_instant_character前的参数类型检查:")
+            print(f"  - siglip_model类型: {type(siglip_model)}")
+            print(f"  - siglip_processor类型: {type(siglip_processor) if siglip_processor else 'None'}")
+            print(f"  - dinov2_model类型: {type(dinov2_model) if dinov2_model else 'None'}")
+            print(f"  - dinov2_processor类型: {type(dinov2_processor) if dinov2_processor else 'None'}")
+            print(f"  - ip_adapter_model类型: {type(ip_adapter_model) if ip_adapter_model else 'None'}")
+            
             modified_model = apply_instant_character(
                 model=model,
                 reference_image=reference_image,
                 weight=weight,
-                clip=clip,  # 传递外部CLIP模型
+                conditioning=conditioning,  # 传递外部条件特征
                 siglip_model=siglip_model,
+                siglip_processor=siglip_processor,  # 显式传递处理器
                 dinov2_model=dinov2_model,
+                dinov2_processor=dinov2_processor,  # 显式传递处理器
                 ip_adapter_model=ip_adapter_model
             )
             
@@ -1158,26 +1155,30 @@ class FluxInstantCharacter:
                 else:
                     print("警告: IP-Adapter特征缺失，InstantCharacter可能无法正常工作")
             
-            # 返回调整后的模型和CLIP
-            return_clip = clip  # 优先使用外部提供的CLIP
-            if return_clip is None and hasattr(modified_model, 'clip'):
-                return_clip = modified_model.clip  # 如果没有外部CLIP，使用模型内部的CLIP
-            elif return_clip is None and hasattr(modified_model, 'model') and hasattr(modified_model.model, 'clip'):
-                return_clip = modified_model.model.clip
+            # 生成融合后的条件特征
+            combined_condition = None
             
-            # 如果没有找到CLIP，返回None
-            if return_clip is None:
-                print("警告: 无法返回CLIP模型")
+            # 优先使用外部提供的条件特征
+            if conditioning is not None:
+                combined_condition = conditioning
+                print("使用外部提供的条件特征")
+            # 否则尝试生成新的条件特征
+            elif hasattr(modified_model, '_ip_adapter_image_embeds') and modified_model._ip_adapter_image_embeds is not None:
+                # 从模型中提取处理后的条件特征
+                combined_condition = [(modified_model._ip_adapter_image_embeds, weight)]
+                print("已生成融合后的条件特征")
+            else:
+                # 创建空的条件特征以防止返回None
+                print("警告: 无法生成条件特征，返回空条件")
+                combined_condition = []
                 
-            return (modified_model, return_clip)
+            return (modified_model, combined_condition)
         
         except Exception as e:
             print(f"FluxInstantCharacter处理过程中出错: {e}")
             traceback.print_exc()
-            # 错误时返回原始模型和CLIP
-            return_clip = clip  # 优先使用外部提供的CLIP
-            if return_clip is None and hasattr(model, 'clip'):
-                return_clip = model.clip  # 如果没有外部CLIP，使用模型内部的CLIP
-            elif return_clip is None and hasattr(model, 'model') and hasattr(model.model, 'clip'):
-                return_clip = model.model.clip
-            return (model, return_clip)
+            # 错误时返回原始模型和空条件特征
+            empty_condition = []
+            if conditioning is not None:
+                empty_condition = conditioning
+            return (model, empty_condition)

@@ -2,8 +2,89 @@
   "id": "9a68dd3b-2325-410c-a6f9-dd809511c4c4",
   "revision": 0,
   "last_node_id": 446,
-  "last_link_id": 441,
+  "last_link_id": 461,
   "nodes": [
+    {
+      "id": 10,
+      "type": "VAELoader",
+      "pos": [
+        135.78607177734375,
+        632.14013671875
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "Node name for S&R": "VAELoader",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 16,
+      "type": "KSamplerSelect",
+      "pos": [
+        110.65435028076172,
+        333.2131652832031
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "采样器",
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "Node name for S&R": "KSamplerSelect",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        "euler"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
     {
       "id": 17,
       "type": "BasicScheduler",
@@ -16,7 +97,7 @@
         106
       ],
       "flags": {},
-      "order": 21,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -66,7 +147,7 @@
         82
       ],
       "flags": {},
-      "order": 0,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -85,7 +166,7 @@
         "Node name for S&R": "RandomNoise"
       },
       "widgets_values": [
-        287141042173899,
+        199184464547956,
         "randomize"
       ],
       "color": "#223",
@@ -95,11 +176,11 @@
       "id": 26,
       "type": "FluxGuidance",
       "pos": [
-        1755.8427734375,
-        1078.56982421875
+        2796.4072265625,
+        290.9298400878906
       ],
       "size": [
-        315,
+        249.574462890625,
         58
       ],
       "flags": {},
@@ -110,7 +191,7 @@
           "label": "条件",
           "name": "conditioning",
           "type": "CONDITIONING",
-          "link": 34
+          "link": 460
         }
       ],
       "outputs": [
@@ -158,7 +239,7 @@
           "label": "模型",
           "name": "model",
           "type": "MODEL",
-          "link": 441
+          "link": 459
         },
         {
           "label": "条件",
@@ -323,22 +404,22 @@
       "id": 91,
       "type": "CLIPAttentionMultiply",
       "pos": [
-        1525.654296875,
-        445.2131652832031
+        695.7720947265625,
+        1092.10791015625
       ],
       "size": [
         315,
         130
       ],
       "flags": {},
-      "order": 17,
+      "order": 18,
       "mode": 0,
       "inputs": [
         {
           "label": "CLIP",
           "name": "clip",
           "type": "CLIP",
-          "link": 434
+          "link": 448
         }
       ],
       "outputs": [
@@ -347,7 +428,7 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            54
+            452
           ]
         }
       ],
@@ -382,14 +463,32 @@
         170
       ],
       "flags": {},
-      "order": 18,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
           "label": "模型",
           "name": "model",
           "type": "MODEL",
-          "link": 321
+          "link": 443
+        },
+        {
+          "label": "宽度",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 50
+        },
+        {
+          "label": "高度",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 51
         }
       ],
       "outputs": [
@@ -426,8 +525,8 @@
       "id": 113,
       "type": "CLIPTextEncode",
       "pos": [
-        2025.4317626953125,
-        659.6446533203125
+        1288.3013916015625,
+        1047.4686279296875
       ],
       "size": [
         400,
@@ -436,14 +535,14 @@
       "flags": {
         "collapsed": false
       },
-      "order": 20,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
           "label": "CLIP",
           "name": "clip",
           "type": "CLIP",
-          "link": 54
+          "link": 452
         },
         {
           "label": "文本",
@@ -452,7 +551,7 @@
           "widget": {
             "name": "text"
           },
-          "link": 323
+          "link": 461
         }
       ],
       "outputs": [
@@ -462,7 +561,7 @@
           "type": "CONDITIONING",
           "slot_index": 0,
           "links": [
-            34
+            453
           ]
         }
       ],
@@ -477,7 +576,160 @@
         }
       },
       "widgets_values": [
-        ""
+        "A {character} is eating a dragon fruit at the workstation",
+        [
+          false,
+          true
+        ]
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 138,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        1013.0643920898438,
+        376.7113342285156
+      ],
+      "size": [
+        315,
+        126
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "宽度",
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 62
+        },
+        {
+          "label": "高度",
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 63
+        }
+      ],
+      "outputs": [
+        {
+          "label": "Latent",
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            391
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 139,
+      "type": "ImpactInt",
+      "pos": [
+        119.18649291992188,
+        1418.976318359375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "整数",
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            50,
+            62
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-impact-pack",
+        "ver": "d900939861ded1ca09ba3ba1735d281810afe53d",
+        "Node name for S&R": "ImpactInt",
+        "aux_id": "ltdrdata/ComfyUI-Impact-Pack",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        720
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 140,
+      "type": "ImpactInt",
+      "pos": [
+        112.63451385498047,
+        1557.0191650390625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "整数",
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            51,
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-impact-pack",
+        "ver": "d900939861ded1ca09ba3ba1735d281810afe53d",
+        "Node name for S&R": "ImpactInt",
+        "aux_id": "ltdrdata/ComfyUI-Impact-Pack",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        1440
       ],
       "color": "#332922",
       "bgcolor": "#593930"
@@ -486,15 +738,15 @@
       "id": 143,
       "type": "String Literal",
       "pos": [
-        1419.979248046875,
-        1764.1942138671875
+        1352.123779296875,
+        1757.282958984375
       ],
       "size": [
         351.6214904785156,
         89.4203872680664
       ],
       "flags": {},
-      "order": 1,
+      "order": 13,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -503,7 +755,7 @@
           "name": "STRING",
           "type": "STRING",
           "links": [
-            323
+            461
           ]
         }
       ],
@@ -519,7 +771,147 @@
         }
       },
       "widgets_values": [
-        "A {character} is eating a dragon fruit at the workstation"
+        "A {character} is eating a dragon fruit at the workstation",
+        [
+          false,
+          true
+        ]
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 351,
+      "type": "UNETLoader",
+      "pos": [
+        128.65573120117188,
+        931.1215209960938
+      ],
+      "size": [
+        330.4774475097656,
+        87.74376678466797
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "模型",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            443,
+            454
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "Node name for S&R": "UNETLoader",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        "flux1-dev-fp8.safetensors",
+        "default"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 352,
+      "type": "DualCLIPLoaderGGUF",
+      "pos": [
+        146.96279907226562,
+        1100.40673828125
+      ],
+      "size": [
+        335.32861328125,
+        106
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            448
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-GGUF",
+        "ver": "a355f8b5eab3f83408eb95546f09cec72e028f04",
+        "Node name for S&R": "DualCLIPLoaderGGUF",
+        "aux_id": "city96/ComfyUI-GGUF",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        "clip_l.safetensors",
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "flux"
+      ],
+      "color": "#332922",
+      "bgcolor": "#593930"
+    },
+    {
+      "id": 353,
+      "type": "LoadImage",
+      "pos": [
+        670.9934692382812,
+        1386.0850830078125
+      ],
+      "size": [
+        315.6220703125,
+        412.0389099121094
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "图像",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            424
+          ]
+        },
+        {
+          "label": "遮罩",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "Node name for S&R": "LoadImage",
+        "ttNbgOverride": {
+          "color": "#332922",
+          "bgcolor": "#593930",
+          "groupcolor": "#b06634"
+        }
+      },
+      "widgets_values": [
+        "微信截图_20250523140546.png",
+        "image"
       ],
       "color": "#332922",
       "bgcolor": "#593930"
@@ -528,8 +920,8 @@
       "id": 354,
       "type": "SaveImage",
       "pos": [
-        2178.210205078125,
-        1232.3187255859375
+        2171.299072265625,
+        1134.8704833984375
       ],
       "size": [
         373.3852844238281,
@@ -564,96 +956,41 @@
       "bgcolor": "#593930"
     },
     {
-      "id": 360,
-      "type": "CLIPVisionLoader",
+      "id": 355,
+      "type": "Note",
       "pos": [
-        946.9576416015625,
-        773.2044677734375
+        1497.0587158203125,
+        702.9708862304688
       ],
       "size": [
-        362.20458984375,
-        71.73226165771484
+        333.9744567871094,
+        191.37799072265625
       ],
       "flags": {},
-      "order": 2,
-      "mode": 4,
+      "order": 9,
+      "mode": 0,
       "inputs": [],
-      "outputs": [
-        {
-          "label": "CLIP视觉",
-          "name": "CLIP_VISION",
-          "type": "CLIP_VISION",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "CLIPVisionLoader",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
+      "outputs": [],
+      "properties": {},
       "widgets_values": [
-        "dinov2-giant\\model.safetensors"
+        "PIP InstantCharacter\nPIPOriginalInstantCharacterExtractor\nPIP InstantCharacter Extractor (Original)\nPIP InstantCharacter Feature Adapter\n\nInstantCharacter"
       ],
-      "color": "#332922",
-      "bgcolor": "#593930"
-    },
-    {
-      "id": 364,
-      "type": "CLIPVisionLoader",
-      "pos": [
-        945.1187133789062,
-        902.6381225585938
-      ],
-      "size": [
-        393.3595886230469,
-        68.42792510986328
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "CLIP视觉",
-          "name": "CLIP_VISION",
-          "type": "CLIP_VISION",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "CLIPVisionLoader",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        "google\\siglip-so400m-patch14-384\\model.safetensors"
-      ],
-      "color": "#332922",
-      "bgcolor": "#593930"
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 384,
       "type": "Note",
       "pos": [
-        2615.689208984375,
-        547.601318359375
+        2166.78564453125,
+        956.0296020507812
       ],
       "size": [
         289.13018798828125,
         88
       ],
       "flags": {},
-      "order": 4,
+      "order": 14,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -663,6 +1000,105 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 424,
+      "type": "SigLIP_Loader",
+      "pos": [
+        1281.0523681640625,
+        1317.712158203125
+      ],
+      "size": [
+        400.06610107421875,
+        74.73617553710938
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SIGLIP_MODEL",
+          "type": "SIGLIP_MODEL",
+          "links": [
+            456
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
+        "ver": "b04bcd9d99aa4e894c0124cc632b4c15e92d62e8",
+        "Node name for S&R": "SigLIP_Loader"
+      },
+      "widgets_values": [
+        "siglip-so400m-patch14-384"
+      ]
+    },
+    {
+      "id": 425,
+      "type": "DINOv2_Loader",
+      "pos": [
+        1366.590087890625,
+        1479.380126953125
+      ],
+      "size": [
+        303.32012939453125,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "DINOV2_MODEL",
+          "type": "DINOV2_MODEL",
+          "links": [
+            457
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
+        "ver": "b04bcd9d99aa4e894c0124cc632b4c15e92d62e8",
+        "Node name for S&R": "DINOv2_Loader"
+      },
+      "widgets_values": [
+        "dinov2-giant"
+      ]
+    },
+    {
+      "id": 426,
+      "type": "IPAdapter_Loader",
+      "pos": [
+        1386.285400390625,
+        1618.4970703125
+      ],
+      "size": [
+        282.8739013671875,
+        58
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IP_ADAPTER_MODEL",
+          "type": "IP_ADAPTER_MODEL",
+          "links": [
+            458
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
+        "ver": "b04bcd9d99aa4e894c0124cc632b4c15e92d62e8",
+        "Node name for S&R": "IPAdapter_Loader"
+      },
+      "widgets_values": [
+        "是"
+      ]
     },
     {
       "id": 430,
@@ -716,7 +1152,7 @@
           "type": "IMAGE",
           "links": [
             427,
-            437
+            455
           ]
         },
         {
@@ -814,12 +1250,12 @@
       "id": 437,
       "type": "PreviewImage",
       "pos": [
-        1835.10546875,
-        1581.6549072265625
+        1781.6087646484375,
+        1596.8890380859375
       ],
       "size": [
-        268.8000183105469,
-        276.06048583984375
+        210,
+        258
       ],
       "flags": {},
       "order": 22,
@@ -848,391 +1284,15 @@
       "bgcolor": "#593930"
     },
     {
-      "id": 138,
-      "type": "EmptySD3LatentImage",
-      "pos": [
-        1013.0643920898438,
-        376.7113342285156
-      ],
-      "size": [
-        315,
-        126
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "Latent",
-          "name": "LATENT",
-          "type": "LATENT",
-          "slot_index": 0,
-          "links": [
-            391
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "EmptySD3LatentImage",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        1024,
-        1024,
-        1
-      ],
-      "color": "#332922",
-      "bgcolor": "#593930"
-    },
-    {
-      "id": 16,
-      "type": "KSamplerSelect",
-      "pos": [
-        119.4697494506836,
-        220.81643676757812
-      ],
-      "size": [
-        315,
-        58
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "采样器",
-          "name": "SAMPLER",
-          "type": "SAMPLER",
-          "links": [
-            39
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "KSamplerSelect",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        "euler"
-      ],
-      "color": "#332922",
-      "bgcolor": "#593930"
-    },
-    {
-      "id": 10,
-      "type": "VAELoader",
-      "pos": [
-        122.7755355834961,
-        424.0010986328125
-      ],
-      "size": [
-        315,
-        58
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "links": [
-            43
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "VAELoader",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        "ae.safetensors"
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 426,
-      "type": "IPAdapter_Loader",
-      "pos": [
-        1398.70361328125,
-        1565.5120849609375
-      ],
-      "size": [
-        282.8739013671875,
-        58
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IP_ADAPTER_MODEL",
-          "type": "IP_ADAPTER_MODEL",
-          "links": [
-            440
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
-        "ver": "62071a4428bbc0cdcf74e5137ab49a18fc7bfab6",
-        "Node name for S&R": "IPAdapter_Loader"
-      },
-      "widgets_values": [
-        "是"
-      ]
-    },
-    {
-      "id": 353,
-      "type": "LoadImage",
-      "pos": [
-        670.9934692382812,
-        1386.0850830078125
-      ],
-      "size": [
-        315.6220703125,
-        412.0389099121094
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "图像",
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            424
-          ]
-        },
-        {
-          "label": "遮罩",
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "LoadImage",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        "144689950 (1).png",
-        "image"
-      ],
-      "color": "#332922",
-      "bgcolor": "#593930"
-    },
-    {
-      "id": 444,
-      "type": "DualCLIPLoader",
-      "pos": [
-        137.60382080078125,
-        534.0731201171875
-      ],
-      "size": [
-        315,
-        130
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            434
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.30",
-        "Node name for S&R": "DualCLIPLoader"
-      },
-      "widgets_values": [
-        "t5xxl_fp8_e4m3fn.safetensors",
-        "clip_l.safetensors",
-        "flux",
-        "default"
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 351,
-      "type": "UNETLoader",
-      "pos": [
-        145.100341796875,
-        737.0455322265625
-      ],
-      "size": [
-        330.4774475097656,
-        87.74376678466797
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "label": "模型",
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            321,
-            436
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.29",
-        "Node name for S&R": "UNETLoader",
-        "ttNbgOverride": {
-          "color": "#332922",
-          "bgcolor": "#593930",
-          "groupcolor": "#b06634"
-        }
-      },
-      "widgets_values": [
-        "flux1-dev-fp8.safetensors",
-        "default"
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 355,
-      "type": "Note",
-      "pos": [
-        1497.0587158203125,
-        702.9708862304688
-      ],
-      "size": [
-        333.9744567871094,
-        191.37799072265625
-      ],
-      "flags": {},
-      "order": 13,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "PIP InstantCharacter\nPIPOriginalInstantCharacterExtractor\nPIP InstantCharacter Extractor (Original)\nPIP InstantCharacter Feature Adapter\n\nInstantCharacter"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 424,
-      "type": "SigLIP_Loader",
-      "pos": [
-        1278.5687255859375,
-        1296.186767578125
-      ],
-      "size": [
-        400.06610107421875,
-        74.73617553710938
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "SIGLIP_MODEL",
-          "type": "SIGLIP_MODEL",
-          "links": [
-            438
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
-        "ver": "62071a4428bbc0cdcf74e5137ab49a18fc7bfab6",
-        "Node name for S&R": "SigLIP_Loader"
-      },
-      "widgets_values": [
-        "siglip-so400m-patch14-384"
-      ]
-    },
-    {
-      "id": 425,
-      "type": "DINOv2_Loader",
-      "pos": [
-        1376.524658203125,
-        1442.1251220703125
-      ],
-      "size": [
-        303.32012939453125,
-        58
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "DINOV2_MODEL",
-          "type": "DINOV2_MODEL",
-          "links": [
-            439
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
-        "ver": "62071a4428bbc0cdcf74e5137ab49a18fc7bfab6",
-        "Node name for S&R": "DINOv2_Loader"
-      },
-      "widgets_values": [
-        "dinov2-giant"
-      ]
-    },
-    {
       "id": 446,
       "type": "FluxInstantCharacter",
       "pos": [
-        1762.9786376953125,
-        1258.801025390625
+        1780.7254638671875,
+        1311.88623046875
       ],
       "size": [
-        315,
-        162
+        270,
+        182
       ],
       "flags": {},
       "order": 23,
@@ -1241,30 +1301,36 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 436
+          "link": 454
         },
         {
           "name": "reference_image",
           "type": "IMAGE",
-          "link": 437
+          "link": 455
+        },
+        {
+          "name": "conditioning",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 453
         },
         {
           "name": "siglip_model",
           "shape": 7,
           "type": "SIGLIP_MODEL",
-          "link": 438
+          "link": 456
         },
         {
           "name": "dinov2_model",
           "shape": 7,
           "type": "DINOV2_MODEL",
-          "link": 439
+          "link": 457
         },
         {
           "name": "ip_adapter_model",
           "shape": 7,
           "type": "IP_ADAPTER_MODEL",
-          "link": 440
+          "link": 458
         }
       ],
       "outputs": [
@@ -1272,17 +1338,24 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            441
+            459
+          ]
+        },
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            460
           ]
         }
       ],
       "properties": {
         "aux_id": "chenpipi0807/Comfyui_InstantCharacter_PIP",
-        "ver": "62071a4428bbc0cdcf74e5137ab49a18fc7bfab6",
+        "ver": "b04bcd9d99aa4e894c0124cc632b4c15e92d62e8",
         "Node name for S&R": "FluxInstantCharacter"
       },
       "widgets_values": [
-        1,
+        0.8,
         "开启"
       ]
     }
@@ -1295,14 +1368,6 @@
       17,
       0,
       "MODEL"
-    ],
-    [
-      34,
-      113,
-      0,
-      26,
-      0,
-      "CONDITIONING"
     ],
     [
       36,
@@ -1361,28 +1426,36 @@
       "VAE"
     ],
     [
-      54,
-      91,
-      0,
-      113,
-      0,
-      "CLIP"
-    ],
-    [
-      321,
-      351,
+      50,
+      139,
       0,
       105,
-      0,
-      "MODEL"
+      1,
+      "INT"
     ],
     [
-      323,
-      143,
+      51,
+      140,
       0,
-      113,
+      105,
+      2,
+      "INT"
+    ],
+    [
+      62,
+      139,
+      0,
+      138,
+      0,
+      "INT"
+    ],
+    [
+      63,
+      140,
+      0,
+      138,
       1,
-      "STRING"
+      "INT"
     ],
     [
       325,
@@ -1425,15 +1498,39 @@
       "IMAGE"
     ],
     [
-      434,
-      444,
+      443,
+      351,
+      0,
+      105,
+      0,
+      "MODEL"
+    ],
+    [
+      448,
+      352,
       0,
       91,
       0,
       "CLIP"
     ],
     [
-      436,
+      452,
+      91,
+      0,
+      113,
+      0,
+      "CLIP"
+    ],
+    [
+      453,
+      113,
+      0,
+      446,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      454,
       351,
       0,
       446,
@@ -1441,7 +1538,7 @@
       "MODEL"
     ],
     [
-      437,
+      455,
       434,
       0,
       446,
@@ -1449,36 +1546,52 @@
       "IMAGE"
     ],
     [
-      438,
+      456,
       424,
       0,
       446,
-      2,
+      3,
       "SIGLIP_MODEL"
     ],
     [
-      439,
+      457,
       425,
       0,
       446,
-      3,
+      4,
       "DINOV2_MODEL"
     ],
     [
-      440,
+      458,
       426,
       0,
       446,
-      4,
+      5,
       "IP_ADAPTER_MODEL"
     ],
     [
-      441,
+      459,
       446,
       0,
       47,
       0,
       "MODEL"
+    ],
+    [
+      460,
+      446,
+      1,
+      26,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      461,
+      143,
+      0,
+      113,
+      1,
+      "STRING"
     ]
   ],
   "groups": [
@@ -1488,8 +1601,8 @@
       "bounding": [
         100.65432739257812,
         71.6131820678711,
-        3747.64013671875,
-        2418.860595703125
+        3696.4619140625,
+        2044.4498291015625
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -1499,13 +1612,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.3310000000000004,
+      "scale": 0.45,
       "offset": [
-        -993.8040979834586,
-        -966.996398858751
+        268.2175243132654,
+        -329.697080997601
       ]
     },
-    "frontendVersion": "1.17.11",
+    "frontendVersion": "1.18.9",
     "ue_links": [],
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,

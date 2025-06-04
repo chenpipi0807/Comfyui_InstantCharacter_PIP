@@ -1119,20 +1119,9 @@ def extract_image_features(image_pil, siglip_model, siglip_processor, dinov2_mod
         
         # SigLIP低分辨率特征
         with torch.no_grad():
-            try:
-                res = siglip_model(siglip_inputs, output_hidden_states=True)
-            except Exception as e:
-                print(f"SigLIP前向传播错误: {e}")
-                # 尝试重新检查设备类型
-                print(f"模型设备: {next(siglip_model.parameters()).device}, 输入设备: {siglip_inputs.device}")
-                print(f"模型类型: {next(siglip_model.parameters()).dtype}, 输入类型: {siglip_inputs.dtype}")
-                
-                # 尝试移动模型而不是输入
-                siglip_model = siglip_model.to(siglip_inputs.device, siglip_inputs.dtype)
-                print(f"将模型移动到输入的设备和类型: {siglip_inputs.device}, {siglip_inputs.dtype}")
-                
-                # 再次尝试
-                res = siglip_model(siglip_inputs, output_hidden_states=True)
+            # 直接调用模型，如果出错则忠实返回错误而不尝试自动修复
+            print(f"SigLIP模型设备: {next(siglip_model.parameters()).device}, 输入设备: {siglip_inputs.device}")
+            res = siglip_model(siglip_inputs, output_hidden_states=True)
         
         siglip_image_embeds = res.last_hidden_state
         print(f"SigLIP hidden_states实际长度: {len(res.hidden_states)}")
@@ -1158,20 +1147,9 @@ def extract_image_features(image_pil, siglip_model, siglip_processor, dinov2_mod
                 print(f"DINOv2模型移动完成，现在在: {next(dinov2_model.parameters()).device}")
         
         with torch.no_grad():
-            try:
-                res = dinov2_model(dinov2_inputs, output_hidden_states=True)
-            except Exception as e:
-                print(f"DINOv2前向传播错误: {e}")
-                # 尝试重新检查设备类型
-                print(f"模型设备: {next(dinov2_model.parameters()).device}, 输入设备: {dinov2_inputs.device}")
-                print(f"模型类型: {next(dinov2_model.parameters()).dtype}, 输入类型: {dinov2_inputs.dtype}")
-                
-                # 尝试移动模型而不是输入
-                dinov2_model = dinov2_model.to(dinov2_inputs.device, dinov2_inputs.dtype)
-                print(f"将模型移动到输入的设备和类型: {dinov2_inputs.device}, {dinov2_inputs.dtype}")
-                
-                # 再次尝试
-                res = dinov2_model(dinov2_inputs, output_hidden_states=True)
+            # 直接调用模型，如果出错则忠实返回错误而不尝试自动修复
+            print(f"DINOv2模型设备: {next(dinov2_model.parameters()).device}, 输入设备: {dinov2_inputs.device}")
+            res = dinov2_model(dinov2_inputs, output_hidden_states=True)
         
         dinov2_image_embeds = res.last_hidden_state[:, 1:] # 移除CLS token
         print(f"DINOv2深层特征去除CLS token后形状: {dinov2_image_embeds.shape}")
@@ -1972,100 +1950,77 @@ def generate_ip_adapter_embeddings(reference_image, siglip_model, siglip_process
         return None
 
 # 将InstantCharacter应用到模型
-def apply_instant_character(model, reference_image, siglip_model=None, siglip_processor=None, dinov2_model=None, dinov2_processor=None, ip_adapter_model=None, weight=1.0, clip=None):
+def apply_instant_character(model, reference_image, siglip_model=None, siglip_processor=None, dinov2_model=None, dinov2_processor=None, ip_adapter_model=None, weight=1.0, clip=None, conditioning=None):
+    # 打印调试信息 - 函数开始时的参数状态
+    print(f"[flux_adapter] 函数调用时的参数类型:")
+    print(f"[flux_adapter]   - siglip_model类型: {type(siglip_model)}")
+    print(f"[flux_adapter]   - siglip_processor类型: {type(siglip_processor) if siglip_processor else 'None'}")
+    print(f"[flux_adapter]   - dinov2_model类型: {type(dinov2_model) if dinov2_model else 'None'}")
+    print(f"[flux_adapter]   - dinov2_processor类型: {type(dinov2_processor) if dinov2_processor else 'None'}")
+    
+    # 处理模型元组情况 - 增加详细调试信息
+    # 如果传入的是元组但没有单独传递处理器，从元组中提取
+    if isinstance(siglip_model, tuple):
+        print(f"[flux_adapter] SigLIP模型是元组，长度: {len(siglip_model)}")
+        if len(siglip_model) == 2 and siglip_processor is None:
+            print(f"[flux_adapter] 从元组中提取SigLIP处理器，元组内容类型: [{type(siglip_model[0])}, {type(siglip_model[1])}]")
+            siglip_processor = siglip_model[1]
+            siglip_model = siglip_model[0]
+        else:
+            print(f"[flux_adapter] SigLIP元组长度或处理器状态不符合提取条件")
+    
+    if isinstance(dinov2_model, tuple):
+        print(f"[flux_adapter] DINOv2模型是元组，长度: {len(dinov2_model)}")
+        if len(dinov2_model) == 2 and dinov2_processor is None:
+            print(f"[flux_adapter] 从元组中提取DINOv2处理器，元组内容类型: [{type(dinov2_model[0])}, {type(dinov2_model[1])}]")
+            dinov2_processor = dinov2_model[1]
+            dinov2_model = dinov2_model[0]
+        else:
+            print(f"[flux_adapter] DINOv2元组长度或处理器状态不符合提取条件")
+    
+    # 再次检查提取后的状态
+    print(f"[flux_adapter] 提取后的参数状态:")
+    print(f"[flux_adapter]   - siglip_model类型: {type(siglip_model)}")
+    print(f"[flux_adapter]   - siglip_processor类型: {type(siglip_processor) if siglip_processor else 'None'}")
     try:
         print(f"=== 开始应用InstantCharacter到模型 ===")
         
-        # 0. 处理CLIP模型
+        # 0. 处理CLIP模型和条件特征
         clip_model = None
+        has_conditioning = conditioning is not None
         
-        # 优先使用外部传入的CLIP模型
-        if clip is not None:
+        # 先检查是否提供了条件特征
+        if has_conditioning:
+            print(f"检测到外部提供的条件特征，优先使用")
+            # 直接使用外部提供的条件特征，跳过CLIP处理
+            print(f"使用外部条件特征，跳过CLIP处理")
+        # 如果没有条件特征，但有CLIP模型
+        elif clip is not None:
             clip_model = clip
             print(f"使用外部提供的CLIP模型，类型: {type(clip)}")
             # 外部CLIP模型通常已经正确配置，无需修补
             print(f"使用外部CLIP模型，跳过CLIP模型修复步骤")
-        else:
-            # 如果没有外部CLIP，尝试从模型内部查找
-            print(f"没有提供外部CLIP模型，尝试从模型内部查找CLIP组件")
-            if hasattr(model, 'clip'):
-                clip_model = model.clip
-                print(f"从model.clip属性找到CLIP模型")
-            elif hasattr(model, 'cond_stage_model'):
-                clip_model = model.cond_stage_model
-                print(f"从model.cond_stage_model属性找到CLIP模型")
-            elif hasattr(model, 'text_encoder'):
-                clip_model = model.text_encoder
-                print(f"从model.text_encoder属性找到CLIP模型")
-            else:
-                # 在常见的ComfyUI的嵌套属性中查找
-                if hasattr(model, 'model'):
-                    if hasattr(model.model, 'clip'):
-                        clip_model = model.model.clip
-                        print(f"从model.model.clip属性找到CLIP模型")
-                    elif hasattr(model.model, 'cond_stage_model'):
-                        clip_model = model.model.cond_stage_model
-                        print(f"从model.model.cond_stage_model属性找到CLIP模型")
-            
-            # 如果找到内部CLIP模型，检查并修复缺失的参数
-            if clip_model is not None:
-                print(f"对内部CLIP模型进行参数完整性检查和修复")
-                fixed = fix_clip_model_missing_params(clip_model)
-                if fixed:
-                    print(f"CLIP模型参数已修复，应用forward方法补丁")
-                    patched = patch_clip_text_encoder_forward(clip_model)
-                    if patched:
-                        print(f"CLIP模型已完全修复和增强")
-            else:
-                print(f"未找到CLIP模型，跳过修复步骤")
         
-        # 1. 确保模型有效 - 特别为ComfyUI中的Transformer格式FLUX模型设计
-        # 在ComfyUI中，模型是以独立的.safetensors文件加载，并被包裹在ComfyUI的各种包装器中
+        # 简化FLUX模型检测逻辑，只使用直接的检查方式
         print(f"检查FLUX模型兼容性，模型类型: {type(model)}")
         
-        # 尽量适应ComfyUI中的各种可能的FLUX模型包装格式
-        is_flux = False
+        # 简化为只使用ComfyUI ModelPatcher格式的检测
         model_components = {}
+        is_flux = False
         
-        # 检查ComfyUI ModelPatcher格式
+        # 只使用最主要的检测方式，无备用方式
         if hasattr(model, 'model') and hasattr(model.model, 'diffusion_model'):
             unet_type = str(model.model.diffusion_model.__class__.__name__).lower()
             if 'flux' in unet_type:
                 is_flux = True
                 print(f"检测到ComfyUI FLUX UNet模型: {unet_type}")
                 model_components['unet'] = model.model.diffusion_model
-            
-        # 检查model_type属性
-        if hasattr(model, 'model_type') and isinstance(model.model_type, str):
-            if 'flux' in model.model_type.lower():
-                is_flux = True
-                print(f"通过model_type属性检测到FLUX模型: {model.model_type}")
-                
-        # 检查更多可能的属性
+        
+        # 提取UNet组件供后续使用
         if hasattr(model, 'unet'):
             model_components['unet'] = model.unet
-            if hasattr(model.unet, 'model_type') and isinstance(model.unet.model_type, str):
-                if 'flux' in model.unet.model_type.lower():
-                    is_flux = True
-                    print(f"通过unet.model_type检测到FLUX模型: {model.unet.model_type}")
-            # 如果存在name属性并包含'flux'
-            if hasattr(model.unet, 'name') and 'flux' in str(model.unet.name).lower():
-                is_flux = True
-                print(f"通过unet.name检测到FLUX模型: {model.unet.name}")
-                
-        # 检查文件名中是否包含'flux'
-        if hasattr(model, 'filename') and 'flux' in str(model.filename).lower():
-            is_flux = True
-            print(f"通过文件名检测到FLUX模型: {model.filename}")
         
-        # 手动设置为Flux模型类型，确保能继续处理    
-        is_flux = True
-            
-        # 打印模型的一些基本属性，帮助调试
-        print(f"模型属性: {[attr for attr in dir(model) if not attr.startswith('__')][:10]}")
-        if hasattr(model, 'model'):
-            print(f"model属性: {[attr for attr in dir(model.model) if not attr.startswith('__')][:10]}")
-            
+        # 不再强制设置is_flux，而是根据实际检测来决定
         if not is_flux:
             print(f"不是FLUX模型，退出")
             return model
@@ -2107,46 +2062,81 @@ def apply_instant_character(model, reference_image, siglip_model=None, siglip_pr
             return model
             
         if siglip_processor is None:
-            print("检测到SigLIP处理器缺失，尝试自动创建")
-            try:
-                from transformers import AutoProcessor
-                siglip_processor = AutoProcessor.from_pretrained("google/siglip-base-patch16-384")
-                print("成功创建 SigLIP 处理器")
-            except Exception as e:
-                print(f"无法创建 SigLIP 处理器: {e}")
-                return model
+            print(f"错误: SigLIP处理器缺失，请确保正确连接SigLIP模型节点")
+            print(f"SigLIP模型类型: {type(siglip_model)}")
+            if isinstance(siglip_model, tuple):
+                print(f"SigLIP模型是元组，长度: {len(siglip_model)}")
+                for i, item in enumerate(siglip_model):
+                    print(f"SigLIP元组[{i}]类型: {type(item)}")
+            return model
         
+        # 不自动提取或创建DINOv2处理器，必须由外部提供
         if dinov2_model is not None and dinov2_processor is None:
-            print("尝试从DINOv2模型中提取处理器")
-            if isinstance(dinov2_model, tuple) and len(dinov2_model) >= 2:
-                dinov2_processor = dinov2_model[1]
-                dinov2_model = dinov2_model[0]
-                print("从DINOv2模型元组中提取处理器成功")
-            elif hasattr(dinov2_model, 'processor') and dinov2_model.processor is not None:
-                dinov2_processor = dinov2_model.processor
-                print("从DINOv2模型属性中提取处理器成功")
-            elif hasattr(dinov2_model, 'image_processor') and dinov2_model.image_processor is not None:
-                dinov2_processor = dinov2_model.image_processor
-                print("从DINOv2模型属性中提取image_processor成功")
-            else:
-                try:
-                    from transformers import AutoProcessor
-                    dinov2_processor = AutoProcessor.from_pretrained("facebook/dinov2-base")
-                    print("无法从模型中提取DINOv2处理器，使用默认处理器")
-                except Exception as e:
-                    print(f"创建DINOv2处理器失败: {e}")
-                    return model
+            print(f"错误: DINOv2处理器缺失，请确保正确连接DINOv2模型节点")
+            print(f"DINOv2模型类型: {type(dinov2_model)}")
+            return model
         
         # 现在所有组件都准备好了，生成IP-Adapter嵌入
         print(f"所有组件已就绪，开始生成IP-Adapter嵌入")
         print(f"SigLIP处理器类型: {type(siglip_processor)}")
         print(f"DINOv2处理器类型: {type(dinov2_processor)}")
-            
         # 生成IP-Adapter嵌入
-        ip_adapter_image_embeds = generate_ip_adapter_embeddings(reference_image, siglip_model, siglip_processor, dinov2_model, dinov2_processor, ip_adapter_model, scale=weight)
+        ip_adapter_image_embeds = None
+        
+        # 如果有外部提供的条件特征，优先使用
+        if has_conditioning and conditioning is not None:
+            print(f"使用外部提供的条件特征作为IP-Adapter嵌入")
+            print(f"Conditioning类型: {type(conditioning)}")
+            
+            # 解析conditioning格式 - 只支持ComfyUI标准嵌套列表结构
+            if isinstance(conditioning, list) and len(conditioning) > 0:
+                conditioning_list = conditioning
+                print(f"Conditioning是列表类型，长度: {len(conditioning_list)}")
+                
+                # 只处理标准ComfyUI格式[[tensor, weight], ...]
+                first_cond = conditioning_list[0]
+                
+                # 检查是否为嵌套列表格式
+                if isinstance(first_cond, list) and len(first_cond) > 0:
+                    inner_cond = first_cond[0]
+                    
+                    # 标准ComfyUI格式: [[(张量, 权重)], ...]
+                    if isinstance(inner_cond, tuple) and len(inner_cond) >= 1:
+                        embed = inner_cond[0]
+                        if isinstance(embed, torch.Tensor):
+                            print(f"成功提取条件张量，形状: {embed.shape}")
+                            ip_adapter_image_embeds = embed
+                        else:
+                            print(f"错误: 条件元素不是张量类型，实际类型: {type(embed)}")
+                            return model
+                    
+                    # 特殊情况: 直接是张量而不是元组
+                    elif isinstance(inner_cond, torch.Tensor):
+                        print(f"检测到直接张量，形状: {inner_cond.shape}")
+                        
+                        # 如果是3D张量，取第一层
+                        if len(inner_cond.shape) == 3 and inner_cond.shape[0] == 1:
+                            ip_adapter_image_embeds = inner_cond[0]
+                            print(f"使用3D张量的第一层，结果形状: {ip_adapter_image_embeds.shape}")
+                        else:
+                            ip_adapter_image_embeds = inner_cond
+                    else:
+                        # 不处理其他内部类型
+                        print(f"错误: 条件内部元素格式不支持，类型: {type(inner_cond)}")
+                        return model
+                else:
+                    print(f"错误: 条件列表格式不正确，不是嵌套列表")
+                    return model
+            else:
+                print(f"错误: conditioning不是有效列表，类型: {type(conditioning)}")
+                return model
+        else:
+            # 如果没有外部条件特征，生成新的IP-Adapter嵌入
+            print(f"生成新的IP-Adapter嵌入")
+            ip_adapter_image_embeds = generate_ip_adapter_embeddings(reference_image, siglip_model, siglip_processor, dinov2_model, dinov2_processor, ip_adapter_model, scale=weight)
         
         if ip_adapter_image_embeds is None:
-            print(f"生成IP-Adapter嵌入失败，返回原始模型")
+            print(f"IP-Adapter嵌入不可用，返回原始模型")
             return model
         
         # 保存IP-Adapter嵌入到模型对象，用于传递给采样器
